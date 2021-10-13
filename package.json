@@ -1,0 +1,31 @@
+{
+  "name": "bitrix24botmain",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bot.js",
+  "scripts": {
+    "start": "nodemon bot.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RIXIN101/bitrix24BOT.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RIXIN101/bitrix24BOT/issues"
+  },
+  "homepage": "https://github.com/RIXIN101/bitrix24BOT#readme",
+  "dependencies": {
+    "config": "^3.3.6",
+    "crypto": "^1.0.1",
+    "express": "^4.17.1",
+    "http-build-query": "^0.7.0",
+    "node-cron": "^3.0.0",
+    "node-robokassa": "^0.0.0",
+    "node-telegram-bot-api": "^0.54.0",
+    "nodemon": "^2.0.13",
+    "request": "^2.88.2"
+  }
+}
