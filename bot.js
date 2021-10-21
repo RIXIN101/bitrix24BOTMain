@@ -1,5 +1,5 @@
-// NKi4rN0vyVJ6sB85wPAJ  1 pas not test
-// D16LJj4MrfvpA85wyBgW 2 pas not test
+// LQookTma2e9Y32cW0dZV  1 pas not test
+// K9Uo1tU8vhCs6W3hfwNn 2 pas not test
 //* Подключение библиотек
 const TelegramBot = require("node-telegram-bot-api");
 const config = require('config');
@@ -14,14 +14,14 @@ const robokassa = require('node-robokassa');
 const robokassaHelper = new robokassa.RobokassaHelper({
   merchantLogin: 'MyRenter',
   hashingAlgorithm: 'sha256',
-  password1: 'HaW420oLK3cfYcO0bXMH', //test
-  password2: 'qo0T4Tg0av6vidCc7JzH', //test
+  password1: 'EBW3Zgn5JRh76B5NwAer', //test
+  password2: 'zue65Cr8u8rGPmQIc0Od', //test
   testMode: true,
   resultUrlRequestMethod: 'GET'
 });
 //* Данные из конфига
-const bitrix24Url = config.get('bitrix24Url');
 const amount = config.get('amount');
+const bitrix24Url = config.get('bitrix24Url');
 const TOKEN = config.get('TOKEN');
 //* Создание бота
 const bot = new TelegramBot(TOKEN, {
@@ -71,153 +71,6 @@ bot.on('message', msg => {
   }
 });
 
-//* Получение контакта
-function getContact(nameCompany, chatId){
-getCompanyIdByName(nameCompany).then((response) => {
-  const companyId = response.result[0].ID;
-  getContactByCompanyId(companyId).then(response => {
-    const contactId = response.result[0].CONTACT_ID;
-    return getContactByContactId(contactId);
-  })
-  //! then для работы!
-  .then((response)=>{
-    if (response.result.length == 0) {
-      setTimeout(() => bot.sendMessage(chatId, 'Контакт, привязанный к компании, не обнаружен.'), 650);
-    }
-    if (response.result.length != 0) {
-      contactTemp = {
-        NAME: response.result.NAME,
-        LAST_NAME: response.result.LAST_NAME,
-        PHONE: response.result.PHONE[0].VALUE,
-        EMAIL: response.result.EMAIL[0].VALUE,
-      };
-      const successContactData = `
-          *Контакт привязаный к компании*\n_Имя_: ${contactTemp.NAME} ${contactTemp.LAST_NAME}\n_Телефон_: ${contactTemp.PHONE}\n_Email_: ${contactTemp.EMAIL}`;
-      bot.sendMessage(chatId, successContactData, {parse_mode: 'Markdown'})
-    }
-  })
-})
-}
-
-function getContactByContactId(contactId) {
-return new Promise((resolve, reject)=>{
-  request({
-    url: `${bitrix24Url}/crm.contact.get?id=${contactId}`,
-    json: true
-  }, (error, response, body) => {
-        if(error) reject(error)
-        resolve(body);
-    });
-})
-}
-
-function getContactByCompanyId(companyId) {
-return new Promise((resolve, reject)=>{
-  request({
-    url: `${bitrix24Url}/crm.company.contact.items.get?id=${companyId}`,
-    json: true
-  }, (error, response, body) => {
-        if(error) reject(error)
-        resolve(body);
-    });
-})
-}
-
-//* Получение основной информации о компании
-function getCompany(nameCompany, chatId){
-getCompanyIdByName(nameCompany).then((response) => {
-  let id = response.result[0].ID;
-  return getCompanyById(id);
-})
-//! then для работы!
-.then((response)=>{
-  bot.sendMessage(chatId, validateCompanyInfo(response));
-})
-}
-
-function getCompanyIdByName(name){
-return new Promise((resolve, reject)=>{
-  request({
-    url: `${bitrix24Url}/crm.company.list?filter[TITLE]=${encodeURIComponent(name)}`,
-    json: true
-  }, (error, response, body) => {
-        if(error) reject(error)
-        resolve(body);
-    });
-})
-}
-
-function getCompanyById(id){
-return new Promise((resolve, reject)=>{
-  request({
-    url: `${bitrix24Url}/crm.company.get?id=${id}`,
-    json: true
-  }, (error, response, body) => {
-        if(error) reject(error)
-        resolve(body);
-    });
-})
-}
-//* Валидация данных компании
-function validateCompanyInfo(objData) {
-const respObj = {
-  title: "",
-  phone: [],
-  email: [],
-  web: [],
-  kvt: "",
-  adressObject: "",
-};
-// кВт
-if (objData.result.UF_CRM_1572363633722 !== "") {
-  respObj.kvt = objData.result.UF_CRM_1572363633722;
-} else {
-  respObj.kvt = "Не заполнено";
-}
-// Адрес объекта
-if (objData.result.UF_CRM_5DB9353B0228A !== "") {
-  respObj.adressObject = objData.result.UF_CRM_5DB9353B0228A;
-  const adressObjectArr = respObj.adressObject.split("|")[0];
-  respObj.adressObject = adressObjectArr;
-} else {
-  respObj.adressObject = "Не заполнено";
-}
-// Телефон(-ы)
-if (objData.result.HAS_PHONE === "Y") {
-  const phone = objData.result.PHONE;
-  for (let i = 0; i < phone.length; i++) {
-    respObj.phone.push(objData.result.PHONE[i].VALUE);
-  }
-  const phoneArr = respObj.phone.join(" , ");
-  respObj.phone = phoneArr;
-} else {
-  respObj.phone = "Не заполнено";
-}
-// Почта(-ы)
-if (objData.result.HAS_EMAIL === "Y") {
-  const email = objData.result.EMAIL;
-  for (let i = 0; i < email.length; i++) {
-    respObj.email.push(objData.result.EMAIL[i].VALUE);
-  }
-  const emailArr = respObj.email.join(" , ");
-  respObj.email = emailArr;
-} else {
-  respObj.email = "Не заполнено";
-}
-// Сайт(-ы)
-if (objData.result.WEB !== undefined) {
-  const web = objData.result.WEB;
-  for (let i = 0; i < web.length; i++) {
-    respObj.web.push(objData.result.WEB[i].VALUE);
-  }
-  const webArr = respObj.web.join(" , ");
-  respObj.web = webArr;
-} else {
-  respObj.web = "Не заполнено";
-}
-const successData = `\nНазвание компании: ${respObj.title}\nТелефон: ${respObj.phone}\nE-mail: ${respObj.email}\nСайт: ${respObj.web}\nАдрес Объекта: ${respObj.adressObject}\nкВт: ${respObj.kvt}`;
-return successData;
-}
 
 
 //* Обработка callback query
@@ -337,10 +190,5 @@ function checkOrderLink(kassaObjTemp) {
   });
 }
 
-
-//TODO Если всё будет очень плохо, это ничем не поможет, но будет спамить мне в чат.)
-/* bot.on('polling_error', err => {
-  bot.sendMessage('497394343', `Произошла ошибка и причем очень серьезная, раз я отправил это тебе`);
-}); */
 
 
