@@ -11,57 +11,52 @@ const TOKEN = config.get('TOKEN');
 exports.getContact = function(nameCompany, chatId){
 getCompanyIdByName(nameCompany).then((response) => {
   const companyId = response.result[0].ID;
-  getContactByCompanyId(companyId).then(response => {
-    const contactId = response.result[0].CONTACT_ID;
-    return getContactByContactId(contactId);
+  getContactByCompanyId(companyId, chatId).then(response => {
+    return getContactByContactId(response);
   })
   //! then для работы!
   .then((response)=>{
-    if (response.result.length == 0) {
-      setTimeout(() => {
-            const text = 'Контакт, привязанный к компании, не обнаружен.';
-            const data = {
-                "chat_id": chatId,
-                "text": text
-            };
-            request.post({
-                url: `https://api.telegram.org/bot${TOKEN}/sendMessage`,
-                body: data,
-                json: true
-            }, (error, response, body) => {
-                if (error) console.log(error);
-                else console.log('Контакт, привязанный к компании, не обнаружен.')
-            });
-        }, 650);
-    }
-    if (response.result.length != 0) {
-        console.log(response.result.EMAIL);
-        contactTemp = {
-            NAME: response.result.NAME,
-            LAST_NAME: response.result.LAST_NAME,
-            PHONE: '',
-            EMAIL: ''
-        };
-        if (response.result.PHONE == undefined) contactTemp.PHONE = 'Не введён';
-        else contactTemp.PHONE = response.result.PHONE[0].VALUE;
-        if (response.result.EMAIL == undefined) contactTemp.EMAIL = 'Не введён';
-        else contactTemp.EMAIL = response.result.EMAIL[0].VALUE
+    if (response.error == '') {
+      const text = 'Контакт, привязанный к компании, не обнаружен.';
+      const data = {
+          "chat_id": chatId,
+          "text": text
+      };
+      request.post({
+          url: `https://api.telegram.org/bot${TOKEN}/sendMessage`,
+          body: data,
+          json: true
+      }, (error, response, body) => {
+          if (error) console.log(error);
+          else console.log('Контакт, привязанный к компании, не обнаружен.')
+      });
+    } else {
+      contactTemp = {
+        NAME: response.result.NAME,
+        LAST_NAME: response.result.LAST_NAME,
+        PHONE: '',
+        EMAIL: ''
+      };
+      if (response.result.PHONE == undefined) contactTemp.PHONE = 'Не введён';
+      else contactTemp.PHONE = response.result.PHONE[0].VALUE;
+      if (response.result.EMAIL == undefined) contactTemp.EMAIL = 'Не введён';
+      else contactTemp.EMAIL = response.result.EMAIL[0].VALUE
 
-        const successContactData = `
-        Контакт привязаный к компании\nИмя: ${contactTemp.NAME} ${contactTemp.LAST_NAME}\nТелефон: ${contactTemp.PHONE}\nEmail: ${contactTemp.EMAIL}`;
-        const text = successContactData;
-        const data = {
-            "chat_id": chatId,
-            "text": text
-        };
-        request.post({
-            url: `https://api.telegram.org/bot${TOKEN}/sendMessage`,
-            body: data,
-            json: true
-        }, (error, response, body) => {
-            if (error) console.log(error);
-            else console.log('Данные контакта отправлены')
-        });
+      const successContactData = `
+      Контакт привязаный к компании\nИмя: ${contactTemp.NAME} ${contactTemp.LAST_NAME}\nТелефон: ${contactTemp.PHONE}\nEmail: ${contactTemp.EMAIL}`;
+      const text = successContactData;
+      const data = {
+          "chat_id": chatId,
+          "text": text
+      };
+      request.post({
+          url: `https://api.telegram.org/bot${TOKEN}/sendMessage`,
+          body: data,
+          json: true
+      }, (error, response, body) => {
+          if (error) console.log(error);
+          else console.log('Данные контакта отправлены')
+      });
     }
   })
 })
@@ -83,14 +78,21 @@ return new Promise((resolve, reject)=>{
 })
 }
 
-function getContactByCompanyId(companyId) {
+function getContactByCompanyId(companyId, chatId) {
 return new Promise((resolve, reject)=>{
   request({
     url: `${bitrix24Url}/crm.company.contact.items.get?id=${companyId}`,
     json: true
   }, (error, response, body) => {
         if(error) reject(error)
-        resolve(body);
+        if (body.result == false) {
+          resolve(false);
+        } else {
+          console.log('CERF');
+          const contactId = body.result[0].CONTACT_ID;
+          console.log(contactId);
+          resolve(contactId);
+        }
     });
 })
 }
@@ -105,7 +107,6 @@ exports.getCompany = function(nameCompany, chatId){
   //! then для работы!
   .then((response)=>{
       const text = validateCompanyInfo(response);
-      console.log(response);
       const data = {
           "chat_id": chatId,
           "text": text
@@ -206,3 +207,56 @@ function validateCompanyInfo(objData) {
   const successData = `\nНазвание компании: ${respObj.title}\nТелефон: ${respObj.phone}\nE-mail: ${respObj.email}\nСайт: ${respObj.web}\nАдрес Объекта: ${respObj.adressObject}\nкВт: ${respObj.kvt}`;
   return successData;
 }
+
+
+
+
+
+
+
+/* if (response.result.length == 0) {
+  setTimeout(() => {
+        const text = 'Контакт, привязанный к компании, не обнаружен.';
+        const data = {
+            "chat_id": chatId,
+            "text": text
+        };
+        request.post({
+            url: `https://api.telegram.org/bot${TOKEN}/sendMessage`,
+            body: data,
+            json: true
+        }, (error, response, body) => {
+            if (error) console.log(error);
+            else console.log('Контакт, привязанный к компании, не обнаружен.')
+        });
+    }, 650);
+}
+if (response.result.length != 0) {
+    console.log(response.result.EMAIL);
+    contactTemp = {
+        NAME: response.result.NAME,
+        LAST_NAME: response.result.LAST_NAME,
+        PHONE: '',
+        EMAIL: ''
+    };
+    if (response.result.PHONE == undefined) contactTemp.PHONE = 'Не введён';
+    else contactTemp.PHONE = response.result.PHONE[0].VALUE;
+    if (response.result.EMAIL == undefined) contactTemp.EMAIL = 'Не введён';
+    else contactTemp.EMAIL = response.result.EMAIL[0].VALUE
+
+    const successContactData = `
+    Контакт привязаный к компании\nИмя: ${contactTemp.NAME} ${contactTemp.LAST_NAME}\nТелефон: ${contactTemp.PHONE}\nEmail: ${contactTemp.EMAIL}`;
+    const text = successContactData;
+    const data = {
+        "chat_id": chatId,
+        "text": text
+    };
+    request.post({
+        url: `https://api.telegram.org/bot${TOKEN}/sendMessage`,
+        body: data,
+        json: true
+    }, (error, response, body) => {
+        if (error) console.log(error);
+        else console.log('Данные контакта отправлены')
+    });
+} */
