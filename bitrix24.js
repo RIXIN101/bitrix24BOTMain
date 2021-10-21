@@ -98,26 +98,27 @@ return new Promise((resolve, reject)=>{
 
 //* Получение основной информации о компании
 exports.getCompany = function(nameCompany, chatId){
-getCompanyIdByName(nameCompany).then((response) => {
-    let id = response.result[0].ID;
-    return getCompanyById(id);
-})
-//! then для работы!
-.then((response)=>{
-    const text = validateCompanyInfo(response);
-    const data = {
-        "chat_id": chatId,
-        "text": text
-    };
-    request.post({
-        url: `https://api.telegram.org/bot${TOKEN}/sendMessage`,
-        body: data,
-        json: true
-    }, (error, response, body) => {
-        if (error) console.log(error);
-        else console.log('Данные компании отправлены')
-    });
-})
+  getCompanyIdByName(nameCompany).then((response) => {
+      let id = response.result[0].ID;
+      return getCompanyById(id);
+  })
+  //! then для работы!
+  .then((response)=>{
+      const text = validateCompanyInfo(response);
+      console.log(response);
+      const data = {
+          "chat_id": chatId,
+          "text": text
+      };
+      request.post({
+          url: `https://api.telegram.org/bot${TOKEN}/sendMessage`,
+          body: data,
+          json: true
+      }, (error, response, body) => {
+          if (error) console.log(error);
+          else console.log('Данные компании отправлены')
+      });
+  })
 }
 
 function getCompanyIdByName(name){
@@ -145,61 +146,63 @@ return new Promise((resolve, reject)=>{
 }
 //* Валидация данных компании
 function validateCompanyInfo(objData) {
-const respObj = {
-  title: "",
-  phone: [],
-  email: [],
-  web: [],
-  kvt: "",
-  adressObject: "",
-};
-// кВт
-if (objData.result.UF_CRM_1572363633722 !== "") {
-  respObj.kvt = objData.result.UF_CRM_1572363633722;
-} else {
-  respObj.kvt = "Не заполнено";
-}
-// Адрес объекта
-if (objData.result.UF_CRM_5DB9353B0228A !== "") {
-  respObj.adressObject = objData.result.UF_CRM_5DB9353B0228A;
-  const adressObjectArr = respObj.adressObject.split("|")[0];
-  respObj.adressObject = adressObjectArr;
-} else {
-  respObj.adressObject = "Не заполнено";
-}
-// Телефон(-ы)
-if (objData.result.HAS_PHONE === "Y") {
-  const phone = objData.result.PHONE;
-  for (let i = 0; i < phone.length; i++) {
-    respObj.phone.push(objData.result.PHONE[i].VALUE);
+  const respObj = {
+    title: "",
+    phone: [],
+    email: [],
+    web: [],
+    kvt: "",
+    adressObject: "",
+  };
+  // Название компании
+  respObj.title = objData.result.TITLE;
+  // кВт
+  if (objData.result.UF_CRM_1572363633722 !== "") {
+    respObj.kvt = objData.result.UF_CRM_1572363633722;
+  } else {
+    respObj.kvt = "Не заполнено";
   }
-  const phoneArr = respObj.phone.join(" , ");
-  respObj.phone = phoneArr;
-} else {
-  respObj.phone = "Не заполнено";
-}
-// Почта(-ы)
-if (objData.result.HAS_EMAIL === "Y") {
-  const email = objData.result.EMAIL;
-  for (let i = 0; i < email.length; i++) {
-    respObj.email.push(objData.result.EMAIL[i].VALUE);
+  // Адрес объекта
+  if (objData.result.UF_CRM_5DB9353B0228A !== "") {
+    respObj.adressObject = objData.result.UF_CRM_5DB9353B0228A;
+    const adressObjectArr = respObj.adressObject.split("|")[0];
+    respObj.adressObject = adressObjectArr;
+  } else {
+    respObj.adressObject = "Не заполнено";
   }
-  const emailArr = respObj.email.join(" , ");
-  respObj.email = emailArr;
-} else {
-  respObj.email = "Не заполнено";
-}
-// Сайт(-ы)
-if (objData.result.WEB !== undefined) {
-  const web = objData.result.WEB;
-  for (let i = 0; i < web.length; i++) {
-    respObj.web.push(objData.result.WEB[i].VALUE);
+  // Телефон(-ы)
+  if (objData.result.HAS_PHONE === "Y") {
+    const phone = objData.result.PHONE;
+    for (let i = 0; i < phone.length; i++) {
+      respObj.phone.push(objData.result.PHONE[i].VALUE);
+    }
+    const phoneArr = respObj.phone.join(" , ");
+    respObj.phone = phoneArr;
+  } else {
+    respObj.phone = "Не заполнено";
   }
-  const webArr = respObj.web.join(" , ");
-  respObj.web = webArr;
-} else {
-  respObj.web = "Не заполнено";
-}
-const successData = `\nНазвание компании: ${respObj.title}\nТелефон: ${respObj.phone}\nE-mail: ${respObj.email}\nСайт: ${respObj.web}\nАдрес Объекта: ${respObj.adressObject}\nкВт: ${respObj.kvt}`;
-return successData;
+  // Почта(-ы)
+  if (objData.result.HAS_EMAIL === "Y") {
+    const email = objData.result.EMAIL;
+    for (let i = 0; i < email.length; i++) {
+      respObj.email.push(objData.result.EMAIL[i].VALUE);
+    }
+    const emailArr = respObj.email.join(" , ");
+    respObj.email = emailArr;
+  } else {
+    respObj.email = "Не заполнено";
+  }
+  // Сайт(-ы)
+  if (objData.result.WEB !== undefined) {
+    const web = objData.result.WEB;
+    for (let i = 0; i < web.length; i++) {
+      respObj.web.push(objData.result.WEB[i].VALUE);
+    }
+    const webArr = respObj.web.join(" , ");
+    respObj.web = webArr;
+  } else {
+    respObj.web = "Не заполнено";
+  }
+  const successData = `\nНазвание компании: ${respObj.title}\nТелефон: ${respObj.phone}\nE-mail: ${respObj.email}\nСайт: ${respObj.web}\nАдрес Объекта: ${respObj.adressObject}\nкВт: ${respObj.kvt}`;
+  return successData;
 }
