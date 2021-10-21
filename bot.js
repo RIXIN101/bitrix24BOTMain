@@ -7,7 +7,6 @@ const request = require("request");
 const httpBuildQuery = require("http-build-query");
 const crypto = require('crypto');
 const cron = require('node-cron');
-const { log } = require("console");
 const express = require('express');
 const app = express();
 const robokassa = require('node-robokassa');
@@ -47,31 +46,58 @@ bot.on('message', msg => {
   const { id } = msg.chat;
   if (parseMsg == 'Компания:' && parseMsg) {
     match = msg.text.split(' ').join('').split('Компания:');
+    newMatch = msg.text.split(' ');
     resp = match[1];
-    bot.sendMessage(id, `Информация по компании ${resp} найдена. Для получения всей информации нужно платить.\nПолучить ссылку на оплату?`, {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: "Да",
-              callback_data: "Yes",
-            },
-            {
-              text: "Нет",
-              callback_data: "No",
-            },
+    if (newMatch.length > 2) {
+      finMatch = msg.text.split('Компания:').join(' ').split("");
+      console.log(finMatch);
+      for(let i = 0; i < finMatch.length; i++) {
+        if (finMatch[i] == ' ') delete finMatch[i];
+        else break;
+      }
+      bot.sendMessage(id, `Информация по компании ${finMatch.join('')} найдена. Для получения всей информации нужно платить.\nПолучить ссылку на оплату?`, {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "Да",
+                callback_data: "Yes",
+              },
+              {
+                text: "Нет",
+                callback_data: "No",
+              },
+            ],
           ],
-        ],
-      },
-    });
+        },
+      });
+    } else {
+      bot.sendMessage(id, `Информация по компании ${resp} найдена. Для получения всей информации нужно платить.\nПолучить ссылку на оплату?`, {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "Да",
+                callback_data: "Yes",
+              },
+              {
+                text: "Нет",
+                callback_data: "No",
+              },
+            ],
+          ],
+        },
+      });
+    }
   }
-
   if ((parseMsg != 'Компания:' && msg.text != '/help') && msg.text != '/start') {
     bot.sendMessage(msg.chat.id, `Введите _/help_ для помощи.`, {parse_mode: 'Markdown'})
   }
 });
 
-
+bot.on('polling_error', err => {
+  console.log(err);
+});
 
 //* Обработка callback query
 bot.on('callback_query', query => {
