@@ -47,10 +47,10 @@ bot.on('message', msg => {
   if (parseMsg == 'Компания:' && parseMsg) {
     match = msg.text.split(' ').join('').split('Компания:');
     newMatch = msg.text.split(' ');
+    console.log(newMatch);
     resp = match[1];
     if (newMatch.length > 2) {
       finMatch = msg.text.split('Компания:').join(' ').split("");
-      console.log(finMatch);
       for(let i = 0; i < finMatch.length; i++) {
         if (finMatch[i] == ' ') delete finMatch[i];
         else break;
@@ -103,15 +103,28 @@ bot.on('polling_error', err => {
 bot.on('callback_query', query => {
   queryData = query;
   if (query.data == 'Yes') {
-    bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-    const contactTemplate = {
-      fields: {
-          NAME: query.from.first_name,
-          LAST_NAME: query.from.last_name,
-          COMMENTS: `${query.from.id} ${resp}`,
-      }
-    };
-    createOrder(contactTemplate);
+    if (newMatch.length > 2) {
+      bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
+      const contactTemplate = {
+        fields: {
+            NAME: query.from.first_name,
+            LAST_NAME: query.from.last_name,
+            COMMENTS: `${query.from.id} ${finMatch.join('')}`,
+        }
+      };
+      console.log(contactTemplate.fields.COMMENTS);
+      createOrder(contactTemplate);
+    } else {
+      bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
+      const contactTemplate = {
+        fields: {
+            NAME: query.from.first_name,
+            LAST_NAME: query.from.last_name,
+            COMMENTS: `${query.from.id} ${resp}`,
+        }
+      };
+      createOrder(contactTemplate);
+    }
   }
   if (query.data == 'No') {
     bot.sendMessage(query.from.id, `Повторите предыдущие действия. Введите _/help_, если вдруг забыли, что нужно вводить.`, {parse_mode: 'Markdown'});
@@ -124,6 +137,7 @@ function createOrder(contactTemplate) {
     console.log("Контакт создался.");
     getContact(contactTemplate).then(response => {
       const dlTmp = response;
+      console.log(response);
       console.log("Контакт получен");
       createDealAndPaymentURL(dlTmp, contactTemplate).then(response => {
         const ksObjTmp = response;
@@ -160,19 +174,31 @@ function getContact(contactTemplate) {
     }, (error, response, body) => {
       if (error) reject(error);
       if (body.total == 0) {
-        const markdownRejection = 'Возможно вы неправильно ввели команду. Пример: _/contacts Название_'
+        const markdownRejection = 'Возможно вы неправильно ввели команду: Компания: _Название компании_'
         resolve(markdownRejection);
       }
       if (body.total > 0) {
-        const dealTemp = {
-          fields: {
-              "TITLE": 'Касса_Оплата_Информации',
-              "CONTACT_ID": body.result[0].ID,
-              "COMMENTS": `${queryData.from.id} ${resp}`,
-              "OPPORTUNITY": amount
-          }
-        };
-        resolve(dealTemp);
+        if (newMatch.length > 2) {
+          const dealTemp = {
+            fields: {
+                "TITLE": 'Касса_Оплата_Информации',
+                "CONTACT_ID": body.result[0].ID,
+                "COMMENTS": `${queryData.from.id} ${finMatch.join('')}`,
+                "OPPORTUNITY": amount
+            }
+          };
+          resolve(dealTemp);
+        } else {
+          const dealTemp = {
+            fields: {
+                "TITLE": 'Касса_Оплата_Информации',
+                "CONTACT_ID": body.result[0].ID,
+                "COMMENTS": `${queryData.from.id} ${resp}`,
+                "OPPORTUNITY": amount
+            }
+          };
+          resolve(dealTemp);
+        }
       }
     });
   });
@@ -198,7 +224,7 @@ function createDealAndPaymentURL(dealTemplate, contactTemplate) {
             username: `${contactTemplate.fields.NAME} ${contactTemplate.fields.LAST_NAME}`
         }
       }
-      const paymentUrl = robokassaHelper.generatePaymentUrl(amount, body.COMMENTS, options);
+      const paymentUrl = robokassaHelper.generatePaymentUrl(amount, 'Оплата информации', options);
       resolve(paymentUrl);
     });
   });

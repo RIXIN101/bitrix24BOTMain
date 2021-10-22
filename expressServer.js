@@ -34,8 +34,14 @@ app.param(['dealID'], function (req, res, next, value) {
 app.get('/success/:dealID', (req, res) => {
   const reqDealId = req.params.dealID;
   getDealById(reqDealId).then(response => {
-    const chatID = response.result.COMMENTS.split(" ")[0];
-    const companyName = response.result.COMMENTS.split(" ")[1];
+    const comments = response.result.COMMENTS;
+    const chatID = comments.split(" ")[0];
+    let companyName = '';
+    if (comments.split(' ').length > 2) {
+      companyName = comments.split(' ').slice(1).join(' ');
+    } else {
+      companyName = comments.split(' ')[1];
+    }
     console.log(companyName, chatID);
     bitrix24.getCompany(companyName, chatID);
     bitrix24.getContact(companyName, chatID);
