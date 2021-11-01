@@ -48,52 +48,60 @@ bot.onText(/\/help/, (msg) => {
 //* Обработка ввода пользователя (Вывод клавиатуры query)
 bot.on('message', msg => {
   const parseMsg = msg.text.split(' ').join('').split('', 9).join('');
-  console.log(msg.text[8]);
   const { id } = msg.chat;
   if (parseMsg === 'Компания:') {
     match = msg.text.split(' ').join('').split('Компания:');
     newMatch = msg.text.split(' ');
     resp = match[1];
-    console.log(newMatch);
-    if (newMatch.length > 2 && newMatch[1] != ':') {
-      finMatch = msg.text.split('Компания:').join(' ').split("");
-      for(let i = 0; i < finMatch.length; i++) {
-        if (finMatch[i] == ' ') delete finMatch[i];
-        else break;
+    console.log(newMatch)
+    if (newMatch.length > 2) {
+      if (msg.text[8] == ' ' || msg.text[9] != ' ') {
+        bot.sendMessage(id, 'Напишите _/help_ для получения информации о вводе команды корректно')
+      } else {
+        finMatch = msg.text.split('Компания:').join(' ').split("");
+        for(let i = 0; i < finMatch.length; i++) {
+          if (finMatch[i] == ' ') delete finMatch[i];
+          else break;
+        }
+        bot.sendMessage(id, `Вы ввели название компании: ${finMatch.join('')}. Уверены ли вы в правильности написания и желаете получить ссылку на оплату?`, {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "Да",
+                  callback_data: "Yes",
+                },
+                {
+                  text: "Нет",
+                  callback_data: "No",
+                },
+              ],
+            ],
+          },
+        });
       }
-      bot.sendMessage(id, `Вы ввели название компании: ${finMatch.join('')}. Уверены ли вы в правильности написания и желаете получить ссылку на оплату?`, {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: "Да",
-                callback_data: "Yes",
-              },
-              {
-                text: "Нет",
-                callback_data: "No",
-              },
-            ],
-          ],
-        },
-      });
+
     } else {
-      bot.sendMessage(id, `Вы ввели название компании: ${resp}. Уверены ли вы в правильности написания и желаете получить ссылку на оплату?`, {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: "Да",
-                callback_data: "Yes",
-              },
-              {
-                text: "Нет",
-                callback_data: "No",
-              },
+      if (newMatch[0][9] != ' ') {
+        bot.sendMessage(id, 'Напишите _/help_ для получения информации о вводе команды корректно')
+      } else {
+        bot.sendMessage(id, `Вы ввели название компании: ${resp}. Уверены ли вы в правильности написания и желаете получить ссылку на оплату?`, {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "Да",
+                  callback_data: "Yes",
+                },
+                {
+                  text: "Нет",
+                  callback_data: "No",
+                },
+              ],
             ],
-          ],
-        },
-      });
+          },
+        });
+      }
     }
   }
   if ((parseMsg != 'Компания:' && msg.text != '/help') && msg.text != '/start') {
