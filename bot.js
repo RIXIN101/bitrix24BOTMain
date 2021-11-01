@@ -31,7 +31,11 @@ const bot = new TelegramBot(TOKEN, {
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(
     msg.chat.id,
-    "Приветствуем нас в нашем боте, чтобы ознакомится с командами введите /help."
+    `
+Прямые контакты арендаторов коммерческих помещений в СПб по 299 рублей.
+Если контакты окажутся не актуальными – мы вернем вам деньги.
+Введите название латиницей, а мы скажем, есть ли у нас контакты их сотрудников отдела развития.
+    `
   );
 });
 //* Команда /help
@@ -40,22 +44,24 @@ bot.onText(/\/help/, (msg) => {
   const msgObj = 'Напишите _Компания: название компании_ (вводить без точки в конце)';
   bot.sendMessage(id, msgObj, {parse_mode: 'Markdown'});
 });
+
 //* Обработка ввода пользователя (Вывод клавиатуры query)
 bot.on('message', msg => {
   const parseMsg = msg.text.split(' ').join('').split('', 9).join('');
+  console.log(msg.text[8]);
   const { id } = msg.chat;
-  if (parseMsg == 'Компания:' && parseMsg) {
+  if (parseMsg === 'Компания:') {
     match = msg.text.split(' ').join('').split('Компания:');
     newMatch = msg.text.split(' ');
-    console.log(newMatch);
     resp = match[1];
-    if (newMatch.length > 2) {
+    console.log(newMatch);
+    if (newMatch.length > 2 && newMatch[1] != ':') {
       finMatch = msg.text.split('Компания:').join(' ').split("");
       for(let i = 0; i < finMatch.length; i++) {
         if (finMatch[i] == ' ') delete finMatch[i];
         else break;
       }
-      bot.sendMessage(id, `Информация по компании ${finMatch.join('')} найдена. Для получения всей информации нужно платить.\nПолучить ссылку на оплату?`, {
+      bot.sendMessage(id, `Вы ввели название компании: ${finMatch.join('')}. Уверены ли вы в правильности написания и желаете получить ссылку на оплату?`, {
         reply_markup: {
           inline_keyboard: [
             [
@@ -72,7 +78,7 @@ bot.on('message', msg => {
         },
       });
     } else {
-      bot.sendMessage(id, `Информация по компании ${resp} найдена. Для получения всей информации нужно платить.\nПолучить ссылку на оплату?`, {
+      bot.sendMessage(id, `Вы ввели название компании: ${resp}. Уверены ли вы в правильности написания и желаете получить ссылку на оплату?`, {
         reply_markup: {
           inline_keyboard: [
             [
@@ -95,39 +101,144 @@ bot.on('message', msg => {
   }
 });
 
-bot.on('polling_error', err => {
-  console.log(err);
-});
 
 //* Обработка callback query
 bot.on('callback_query', query => {
   queryData = query;
   if (query.data == 'Yes') {
-    if (newMatch.length > 2) {
-      bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-      const contactTemplate = {
-        fields: {
-            NAME: query.from.first_name,
-            LAST_NAME: query.from.last_name,
-            COMMENTS: `${query.from.id} ${finMatch.join('')}`,
+    if (newMatch.length > 2 && newMatch[1] != ':') {
+      checkCompanyAndSendResponse(finMatch.join('')).then(response => {
+        const contactTemplate = {
+          fields: {
+              NAME: `${query.from.first_name}`,
+              LAST_NAME: `${query.from.last_name}`,
+              COMMENTS: `${query.from.id} ${finMatch.join('')}`,
+          }
+        };
+        if (contactTemplate.fields.LAST_NAME == undefined) {
+          contactTemplate.fields.LAST_NAME = '';
         }
-      };
-      console.log(contactTemplate.fields.COMMENTS);
-      createOrder(contactTemplate);
+        if (response.result.length != 0) {
+          bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
+          createOrder(contactTemplate);
+        }
+        if (response.result.length == 0) {
+          const tgId = contactTemplate.fields.COMMENTS.split(' ')[0];
+          bot.sendMessage(tgId, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "Оставить заявку",
+                    callback_data: "review",
+                  },
+                ],
+              ],
+            },
+          });
+          bot.on('callback_query', query => {
+            if (query.data == 'review') {
+              bot.sendMessage(query.from.id, 'Подтвердите согласие на обработку персональных данных для того, чтобы мы связались с вами потом.', {
+                reply_markup: {
+                  inline_keyboard: [
+                    [
+                      {
+                        text: "Да",
+                        callback_data: "Yes2",
+                      },
+                      {
+                        text: "Нет",
+                        callback_data: "No2",
+                      },
+                    ],
+                  ],
+                },
+              })
+              bot.on('callback_query', querySucData => {
+                if (querySucData.data == 'Yes2') {
+                  console.log(contactTemplate);
+                  const rejectContactTmp = {
+                    fields: {
+                      NAME: contactTemplate.fields.NAME,
+                      LAST_NAME: contactTemplate.fields.LAST_NAME,
+                      COMMENTS: `@${query.from.username} ${finMatch.join('')}`
+                    }
+                  }
+                  createRejectDeal(rejectContactTmp);
+                }
+                if (querySucData.data == 'No2') {
+                  bot.sendMessage(querySucData.from.id, 'Попробуйте ввести название компании на латиннице или на кириллице.');
+                }
+              })
+            }
+          });
+        }
+      });
     } else {
-      bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-      const contactTemplate = {
-        fields: {
-            NAME: query.from.first_name,
-            LAST_NAME: query.from.last_name,
-            COMMENTS: `${query.from.id} ${resp}`,
+      checkCompanyAndSendResponse(resp).then(response => {
+        const contactTemplate = {
+          fields: {
+              NAME: query.from.first_name,
+              LAST_NAME: query.from.last_name,
+              COMMENTS: `${query.from.id} ${resp}`,
+          }
+        };
+        if (contactTemplate.fields.LAST_NAME == undefined) {
+          contactTemplate.fields.LAST_NAME = '';
         }
-      };
-      createOrder(contactTemplate);
+        if (response.result.length != 0) {
+          bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
+          createOrder(contactTemplate);
+        }
+        if (response.result.length == 0) {
+          const tgId = contactTemplate.fields.COMMENTS.split(' ')[0];
+          bot.sendMessage(tgId, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "Оставить заявку",
+                    callback_data: "review",
+                  },
+                ],
+              ],
+            },
+          });
+          bot.on('callback_query', query => {
+            if (query.data == 'review') {
+              bot.sendMessage(query.from.id, 'Подтвердите согласие на обработку персональных данных для того, чтобы мы связались с вами потом.', {
+                reply_markup: {
+                  inline_keyboard: [
+                    [
+                      {
+                        text: "Да",
+                        callback_data: "Yes2",
+                      },
+                      {
+                        text: "Нет",
+                        callback_data: "No2",
+                      },
+                    ],
+                  ],
+                },
+              })
+              bot.on('callback_query', querySucData => {
+                if (querySucData.data == 'Yes2') {
+                  contactTemplate.fields.COMMENTS = `@${query.from.username} ${resp}`;
+                  createRejectDeal(contactTemplate);
+                }
+                if (querySucData.data == 'No2') {
+                  bot.sendMessage(querySucData.from.id, 'Попробуйте ввести название компании на латиннице или на кириллице.');
+                }
+              })
+            }
+          });
+        }
+      });
     }
   }
   if (query.data == 'No') {
-    bot.sendMessage(query.from.id, `Повторите предыдущие действия. Введите _/help_, если вдруг забыли, что нужно вводить.`, {parse_mode: 'Markdown'});
+    bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
   }
 });
 
@@ -137,7 +248,6 @@ function createOrder(contactTemplate) {
     console.log("Контакт создался.");
     getContact(contactTemplate).then(response => {
       const dlTmp = response;
-      console.log(response);
       console.log("Контакт получен");
       createDealAndPaymentURL(dlTmp, contactTemplate).then(response => {
         const ksObjTmp = response;
@@ -154,10 +264,10 @@ function createOrder(contactTemplate) {
   })
 }
 //* Создание контакта
-function createContact(contactTemplate) {
+function createContact(cntctTmplte) {
   return new Promise((resolve, reject) => {
     request({
-      url: `${bitrix24Url}/crm.contact.add?${httpBuildQuery(contactTemplate)}`,
+      url: `${bitrix24Url}/crm.contact.add?${httpBuildQuery(cntctTmplte)}`,
       json: true
     }, (error, response, body) => {
       if(error) reject(error);
@@ -169,7 +279,7 @@ function createContact(contactTemplate) {
 function getContact(contactTemplate) {
   return new Promise((resolve, reject) => {
     request({
-      url: `${bitrix24Url}/crm.contact.list?filter[NAME]=${contactTemplate.fields.NAME}&[LAST_NAME]=${contactTemplate.fields.LAST_NAME}`,
+      url: `${bitrix24Url}/crm.contact.list?filter[NAME]=${encodeURIComponent(contactTemplate.fields.NAME)}&[LAST_NAME]=${contactTemplate.fields.LAST_NAME}`,
       json: true
     }, (error, response, body) => {
       if (error) reject(error);
@@ -178,7 +288,7 @@ function getContact(contactTemplate) {
         resolve(markdownRejection);
       }
       if (body.total > 0) {
-        if (newMatch.length > 2) {
+        if (newMatch.length > 2 && newMatch[1] != ':') {
           const dealTemp = {
             fields: {
                 "TITLE": 'Касса_Оплата_Информации',
@@ -200,6 +310,8 @@ function getContact(contactTemplate) {
           resolve(dealTemp);
         }
       }
+
+      console.log(body);
     });
   });
 }
@@ -242,5 +354,80 @@ function checkOrderLink(kassaObjTemp) {
   });
 }
 
+//* Если название такой компании скрипт не нашёл
+function createRejectDeal(tmp) {
+  console.log("Создалась отказанная сделка")
+  createContact(tmp).then(response => {
+    console.log("Контакт создался.");
+    getContactForReject(tmp).then(response => {
+      const dlTmp = response;
+      console.log("Контакт получен");
+      createDeal(dlTmp).then(response => {
+        bot.sendMessage(queryData.from.id, response);
+      });
+    });
+  })
+}
 
+function getContactForReject(tmp) {
+  return new Promise((resolve, reject) => {
+    request({
+      url: `${bitrix24Url}/crm.contact.list?filter[NAME]=${encodeURIComponent(tmp.fields.NAME)}&[LAST_NAME]=${tmp.fields.LAST_NAME}`,
+      json: true
+    }, (error, response, body) => {
+      if (error) reject(error);
+      if (body.total == 0) {
+        const markdownRejection = 'Возникла ошибка: попробуйте ещё раз.';
+        resolve(markdownRejection);
+      }
+      if (body.total > 0) {
+        if (newMatch.length > 2) {
+          const dealTemp = {
+            fields: {
+                "TITLE": 'Касса_Отказ_Оплаты_Информации',
+                "CONTACT_ID": body.result[0].ID,
+                "COMMENTS": `@${queryData.from.username} ${finMatch.join('')}`,
+                "OPPORTUNITY": 0
+            }
+          };
+          resolve(dealTemp);
+        } else {
+          const dealTemp = {
+            fields: {
+                "TITLE": 'Касса_Отказ_Оплаты_Информации',
+                "CONTACT_ID": body.result[0].ID,
+                "COMMENTS": `@${queryData.from.username} ${resp}`,
+                "OPPORTUNITY": 0
+            }
+          };
+          resolve(dealTemp);
+        }
+      }
+    });
+  });
+}
 
+function createDeal(dealTemplate) {
+  return new Promise((resolve, reject) => {
+    request({
+      url: `${bitrix24Url}/crm.deal.add?${httpBuildQuery(dealTemplate)}`,
+      json: true
+    }, (error, response, body) => {
+      if (error) reject(error);
+      console.log('Сделка создается');
+      resolve('Заявка оставлена. С вами свяжуться в скором времени.');
+    });
+  })
+}
+
+function checkCompanyAndSendResponse(companyName) {
+  return new Promise((resolve, reject) => {
+    request({
+      url: `${bitrix24Url}/crm.company.list?filter[TITLE]=${encodeURIComponent(companyName)}`,
+      json: true
+    }, (error, response, body) => {
+      if (error) reject(error);
+      resolve(body);
+    })
+  })
+}

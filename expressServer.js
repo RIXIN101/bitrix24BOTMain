@@ -22,10 +22,6 @@ function getDealById(id) {
   });
 }
 
-/* app.get(`/user/:dealID`, function (req, res, value) {
-  res.end()
-}); */
-
 app.param(['dealID'], function (req, res, next, value) {
   console.log('ID сделки в битриксе', value)
   next()
@@ -44,7 +40,7 @@ app.get('/success/:dealID', (req, res) => {
     }
     console.log(companyName, chatID);
     bitrix24.getCompany(companyName, chatID);
-    bitrix24.getContact(companyName, chatID);
+    bitrix24.getContacts(companyName, chatID);
     const updateDealFields = {
       "ID": reqDealId,
       "fields": {
