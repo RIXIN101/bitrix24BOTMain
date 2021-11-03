@@ -63,43 +63,146 @@ bot.on('message', msg => {
           if (finMatch[i] == ' ') delete finMatch[i];
           else break;
         }
-        bot.sendMessage(id, `Вы ввели название компании: ${finMatch.join('')}. Уверены ли вы в правильности написания и желаете получить ссылку на оплату?`, {
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "Да",
-                  callback_data: "Yes",
-                },
-                {
-                  text: "Нет",
-                  callback_data: "No",
-                },
-              ],
-            ],
-          },
+        checkCompanyAndSendResponse(finMatch.join('')).then(response => {
+          if (response == true) {
+            bot.sendMessage(id, `Мы нашли информацию о компании: ${finMatch.join('')}. После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    {
+                      text: "Да",
+                      callback_data: "Yes",
+                    },
+                    {
+                      text: "Нет",
+                      callback_data: "No",
+                    },
+                  ],
+                ],
+              },
+            });
+          } else {
+            bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    {
+                      text: "Оставить заявку",
+                      callback_data: "review",
+                    },
+                  ],
+                ],
+              },
+            });
+            bot.on('callback_query', query => {
+              if (query.data == 'review') {
+                bot.sendMessage(query.from.id, 'Подтвердите согласие на обработку персональных данных для того, чтобы мы связались с вами потом.', {
+                  reply_markup: {
+                    inline_keyboard: [
+                      [
+                        {
+                          text: "Да",
+                          callback_data: "Yes2",
+                        },
+                        {
+                          text: "Нет",
+                          callback_data: "No2",
+                        },
+                      ],
+                    ],
+                  },
+                })
+                bot.on('callback_query', querySucData => {
+                  if (querySucData.data == 'Yes2') {
+                    const rejectContactTmp = {
+                      fields: {
+                        NAME: contactTemplate.fields.NAME,
+                        LAST_NAME: contactTemplate.fields.LAST_NAME,
+                        COMMENTS: `@${query.from.username} ${finMatch.join('')}`
+                      }
+                    }
+                    createRejectDeal(rejectContactTmp);
+                  }
+                  if (querySucData.data == 'No2') {
+                    bot.sendMessage(querySucData.from.id, 'Попробуйте ввести название компании на латиннице или на кириллице.');
+                  }
+                })
+              }
+            });
+          }
         });
       }
-
     } else {
       if (msg.text[9] != ' ') {
         bot.sendMessage(id, 'Напишите _/help_ для получения информации о вводе команды корректно', {parse_mode: 'Markdown'})
       } else {
-        bot.sendMessage(id, `Вы ввели название компании: ${resp}. Уверены ли вы в правильности написания и желаете получить ссылку на оплату?`, {
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "Да",
-                  callback_data: "Yes",
-                },
-                {
-                  text: "Нет",
-                  callback_data: "No",
-                },
-              ],
-            ],
-          },
+        checkCompanyAndSendResponse(resp).then(response => {
+          if (response == true) {
+            bot.sendMessage(id, `Мы нашли информацию о компании: ${resp}. После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    {
+                      text: "Да",
+                      callback_data: "Yes",
+                    },
+                    {
+                      text: "Нет",
+                      callback_data: "No",
+                    },
+                  ],
+                ],
+              },
+            });
+          } else {
+            bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    {
+                      text: "Оставить заявку",
+                      callback_data: "review",
+                    },
+                  ],
+                ],
+              },
+            });
+            bot.on('callback_query', query => {
+              if (query.data == 'review') {
+                bot.sendMessage(query.from.id, 'Подтвердите согласие на обработку персональных данных для того, чтобы мы связались с вами потом.', {
+                  reply_markup: {
+                    inline_keyboard: [
+                      [
+                        {
+                          text: "Да",
+                          callback_data: "Yes2",
+                        },
+                        {
+                          text: "Нет",
+                          callback_data: "No2",
+                        },
+                      ],
+                    ],
+                  },
+                })
+                bot.on('callback_query', querySucData => {
+                  if (querySucData.data == 'Yes2') {
+                    const rejectContactTmp = {
+                      fields: {
+                        NAME: contactTemplate.fields.NAME,
+                        LAST_NAME: contactTemplate.fields.LAST_NAME,
+                        COMMENTS: `@${query.from.username} ${resp}`
+                      }
+                    }
+                    createRejectDeal(rejectContactTmp);
+                  }
+                  if (querySucData.data == 'No2') {
+                    bot.sendMessage(querySucData.from.id, 'Попробуйте ввести название компании на латиннице или на кириллице.');
+                  }
+                })
+              }
+            });
+          }
         });
       }
     }
@@ -126,61 +229,8 @@ bot.on('callback_query', query => {
         if (contactTemplate.fields.LAST_NAME == undefined) {
           contactTemplate.fields.LAST_NAME = '';
         }
-        if (response.result.length != 0) {
-          bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-          createOrder(contactTemplate);
-        }
-        if (response.result.length == 0) {
-          const tgId = contactTemplate.fields.COMMENTS.split(' ')[0];
-          bot.sendMessage(tgId, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: "Оставить заявку",
-                    callback_data: "review",
-                  },
-                ],
-              ],
-            },
-          });
-          bot.on('callback_query', query => {
-            if (query.data == 'review') {
-              bot.sendMessage(query.from.id, 'Подтвердите согласие на обработку персональных данных для того, чтобы мы связались с вами потом.', {
-                reply_markup: {
-                  inline_keyboard: [
-                    [
-                      {
-                        text: "Да",
-                        callback_data: "Yes2",
-                      },
-                      {
-                        text: "Нет",
-                        callback_data: "No2",
-                      },
-                    ],
-                  ],
-                },
-              })
-              bot.on('callback_query', querySucData => {
-                if (querySucData.data == 'Yes2') {
-                  console.log(contactTemplate);
-                  const rejectContactTmp = {
-                    fields: {
-                      NAME: contactTemplate.fields.NAME,
-                      LAST_NAME: contactTemplate.fields.LAST_NAME,
-                      COMMENTS: `@${query.from.username} ${finMatch.join('')}`
-                    }
-                  }
-                  createRejectDeal(rejectContactTmp);
-                }
-                if (querySucData.data == 'No2') {
-                  bot.sendMessage(querySucData.from.id, 'Попробуйте ввести название компании на латиннице или на кириллице.');
-                }
-              })
-            }
-          });
-        }
+        bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
+        createOrder(contactTemplate);
       });
     } else {
       checkCompanyAndSendResponse(resp).then(response => {
@@ -195,54 +245,8 @@ bot.on('callback_query', query => {
         if (contactTemplate.fields.LAST_NAME == undefined) {
           contactTemplate.fields.LAST_NAME = '';
         }
-        if (response.result.length != 0) {
-          bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-          createOrder(contactTemplate);
-        }
-        if (response.result.length == 0) {
-          const tgId = contactTemplate.fields.COMMENTS.split(' ')[0];
-          bot.sendMessage(tgId, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: "Оставить заявку",
-                    callback_data: "review",
-                  },
-                ],
-              ],
-            },
-          });
-          bot.on('callback_query', query => {
-            if (query.data == 'review') {
-              bot.sendMessage(query.from.id, 'Подтвердите согласие на обработку персональных данных для того, чтобы мы связались с вами потом.', {
-                reply_markup: {
-                  inline_keyboard: [
-                    [
-                      {
-                        text: "Да",
-                        callback_data: "Yes2",
-                      },
-                      {
-                        text: "Нет",
-                        callback_data: "No2",
-                      },
-                    ],
-                  ],
-                },
-              })
-              bot.on('callback_query', querySucData => {
-                if (querySucData.data == 'Yes2') {
-                  contactTemplate.fields.COMMENTS = `@${query.from.username} ${resp}`;
-                  createRejectDeal(contactTemplate);
-                }
-                if (querySucData.data == 'No2') {
-                  bot.sendMessage(querySucData.from.id, 'Попробуйте ввести название компании на латиннице или на кириллице.');
-                }
-              })
-            }
-          });
-        }
+        bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
+        createOrder(contactTemplate);
       });
     }
   }
@@ -436,7 +440,12 @@ function checkCompanyAndSendResponse(companyName) {
       json: true
     }, (error, response, body) => {
       if (error) reject(error);
-      resolve(body);
+      if (body.result.length == 0) {
+        resolve(false);
+      } else {
+        resolve(true)
+      }
     })
   })
 }
+
