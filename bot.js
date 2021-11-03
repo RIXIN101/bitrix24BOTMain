@@ -53,10 +53,9 @@ bot.on('message', msg => {
     match = msg.text.split(' ').join('').split('Компания:');
     newMatch = msg.text.split(' ');
     resp = match[1];
-    console.log(newMatch)
     if (newMatch.length > 2) {
       if (msg.text[8] == ' ' || msg.text[9] != ' ') {
-        bot.sendMessage(id, 'Напишите _/help_ для получения информации о вводе команды корректно')
+        bot.sendMessage(id, 'Напишите _/help_ для получения информации о вводе команды корректно', {parse_mode: 'Markdown'})
       } else {
         finMatch = msg.text.split('Компания:').join(' ').split("");
         for(let i = 0; i < finMatch.length; i++) {
@@ -82,8 +81,8 @@ bot.on('message', msg => {
       }
 
     } else {
-      if (newMatch[0][9] != ' ') {
-        bot.sendMessage(id, 'Напишите _/help_ для получения информации о вводе команды корректно')
+      if (msg.text[9] != ' ') {
+        bot.sendMessage(id, 'Напишите _/help_ для получения информации о вводе команды корректно', {parse_mode: 'Markdown'})
       } else {
         bot.sendMessage(id, `Вы ввели название компании: ${resp}. Уверены ли вы в правильности написания и желаете получить ссылку на оплату?`, {
           reply_markup: {
@@ -184,6 +183,7 @@ bot.on('callback_query', query => {
       });
     } else {
       checkCompanyAndSendResponse(resp).then(response => {
+        console.log(response);
         const contactTemplate = {
           fields: {
               NAME: query.from.first_name,

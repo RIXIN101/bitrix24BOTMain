@@ -1,11 +1,8 @@
-// const TelegramBot = require("node-telegram-bot-api");
 const config = require('config');
 const request = require("request");
-const httpBuildQuery = require("http-build-query");
 var exports = module.exports = {};
 const bitrix24Url = config.get('bitrix24Url');
 const TOKEN = config.get('TOKEN');
-// const bot = new TelegramBot(TOKEN, {polling: true});
 
 //* Получение контакта
 exports.getContacts = function(nameCompany, chatId){
@@ -31,20 +28,7 @@ getCompanyIdByName(nameCompany).then((response) => {
           else console.log('Контакт, привязанный к компании, не обнаружен.')
       });
     } else {
-      contactTemp = {
-        NAME: response.result.NAME,
-        LAST_NAME: response.result.LAST_NAME,
-        PHONE: '',
-        EMAIL: ''
-      };
-      if (response.result.PHONE == undefined) contactTemp.PHONE = 'Не введён';
-      else contactTemp.PHONE = response.result.PHONE[0].VALUE;
-      if (response.result.EMAIL == undefined) contactTemp.EMAIL = 'Не введён';
-      else contactTemp.EMAIL = response.result.EMAIL[0].VALUE
-
-      const successContactData = `
-      Контакт привязаный к компании\nИмя: ${contactTemp.NAME} ${contactTemp.LAST_NAME}\nТелефон: ${contactTemp.PHONE}\nEmail: ${contactTemp.EMAIL}`;
-      const text = successContactData;
+      const text = validateContactInfo(response);
       const data = {
           "chat_id": chatId,
           "text": text
@@ -61,7 +45,6 @@ getCompanyIdByName(nameCompany).then((response) => {
   })
 })
 }
-
 
 function getContactByContactId(contactId) {
 return new Promise((resolve, reject)=>{
@@ -85,15 +68,43 @@ return new Promise((resolve, reject)=>{
         if (body.result == false) {
           resolve(false);
         } else {
-          console.log('CERF');
           const contactId = body.result[0].CONTACT_ID;
-          console.log(contactId);
           resolve(contactId);
         }
     });
 })
 }
+//* Валидация данных контакта
+function validateContactInfo(response) {
+  const respObj = {
+    phone: ``,
+    email: ``,
+  };
+  // Телефон(-ы)
+  if (response.result.HAS_PHONE === "Y") {
+    respObj.phone = response.result.PHONE[0].VALUE;
+  } else {
+    delete respObj.phone;
+  }
+  // Почта(-ы)
+  if (response.result.HAS_EMAIL === "Y") {
+    respObj.email = response.result.EMAIL[0].VALUE;
+  } else {
+    delete respObj.email;
+  }
+  const successContactData = {
+    Title: `\nКонтакт привязаный к компании`,
+  }
+  if (respObj.phone != undefined) {
+    successContactData.Phone = `\nТелефон: ${respObj.phone}`;
+  } else successContactData.Phone = '';
+  if (respObj.email != undefined) {
+    successContactData.Email = `\nE-mail: ${respObj.email}`;
+  } else successContactData.Email = '';
 
+  const successContactDataResp = successContactData.Title + successContactData.Email + successContactData.Phone;
+  return successContactDataResp;
+}
 
 //* Получение основной информации о компании
 exports.getCompany = function(nameCompany, chatId){
@@ -145,12 +156,12 @@ return new Promise((resolve, reject)=>{
 //* Валидация данных компании
 function validateCompanyInfo(objData) {
   const respObj = {
-    title: "",
+    title: ``,
     phone: [],
     email: [],
     web: [],
-    kvt: "",
-    adressObject: "",
+    kvt: ``,
+    adressObject: ``,
   };
   // Название компании
   respObj.title = objData.result.TITLE;
@@ -158,7 +169,7 @@ function validateCompanyInfo(objData) {
   if (objData.result.UF_CRM_1572363633722 !== "") {
     respObj.kvt = objData.result.UF_CRM_1572363633722;
   } else {
-    respObj.kvt = "Не заполнено";
+    delete respObj.kvt;
   }
   // Адрес объекта
   if (objData.result.UF_CRM_5DB9353B0228A !== "") {
@@ -166,7 +177,7 @@ function validateCompanyInfo(objData) {
     const adressObjectArr = respObj.adressObject.split("|")[0];
     respObj.adressObject = adressObjectArr;
   } else {
-    respObj.adressObject = "Не заполнено";
+    delete respObj.adressObject;
   }
   // Телефон(-ы)
   if (objData.result.HAS_PHONE === "Y") {
@@ -177,7 +188,7 @@ function validateCompanyInfo(objData) {
     const phoneArr = respObj.phone.join(" , ");
     respObj.phone = phoneArr;
   } else {
-    respObj.phone = "Не заполнено";
+    delete respObj.phone;
   }
   // Почта(-ы)
   if (objData.result.HAS_EMAIL === "Y") {
@@ -188,7 +199,7 @@ function validateCompanyInfo(objData) {
     const emailArr = respObj.email.join(" , ");
     respObj.email = emailArr;
   } else {
-    respObj.email = "Не заполнено";
+    delete respObj.email;
   }
   // Сайт(-ы)
   if (objData.result.WEB !== undefined) {
@@ -199,8 +210,29 @@ function validateCompanyInfo(objData) {
     const webArr = respObj.web.join(" , ");
     respObj.web = webArr;
   } else {
-    respObj.web = "Не заполнено";
+    delete respObj.web;
   }
-  const successData = `\nНазвание компании: ${respObj.title}\nТелефон: ${respObj.phone}\nE-mail: ${respObj.email}\nСайт: ${respObj.web}\nАдрес Объекта: ${respObj.adressObject}\nкВт: ${respObj.kvt}`;
-  return successData;
+
+  const successData = {
+    successDataTitle: `\nНазвание компании: ${respObj.title}`,
+  }
+
+  if (respObj.phone != undefined) {
+    successData.successDataPhone = `\nТелефон(-ы): ${respObj.phone}`;
+  }
+  if (respObj.email != undefined) {
+    successData.successDataEmail = `\nE-mail(-ы): ${respObj.email}`;
+  }
+  if (respObj.web != undefined) {
+    successData.successDataWeb = `\nСайт(-ы): ${respObj.web}`;
+  }
+  if (respObj.adressObject != undefined) {
+    successData.successDataAdressObject = `\nАдрес Объекта: ${respObj.adressObject}`;
+  }
+  if (respObj.kvt != undefined) {
+    successData.successDataKvt = `\nкВт: ${respObj.kvt}`;
+  }
+
+  const successDataRes = successData.successDataPhone + successData.successDataEmail + successData.successDataWeb + successData.successDataAdressObject + successData.successDataKvt;
+  return successDataRes;
 }
