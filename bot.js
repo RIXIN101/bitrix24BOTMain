@@ -10,6 +10,7 @@ const cron = require('node-cron');
 const express = require('express');
 const app = express();
 const robokassa = require('node-robokassa');
+const { response } = require("express");
 const robokassaHelper = new robokassa.RobokassaHelper({
   merchantLogin: 'MyRenter',
   hashingAlgorithm: 'sha256',
@@ -287,7 +288,7 @@ function createContact(cntctTmplte) {
 function getContact(contactTemplate) {
   return new Promise((resolve, reject) => {
     request({
-      url: `${bitrix24Url}/crm.contact.list?filter[NAME]=${encodeURIComponent(contactTemplate.fields.NAME)}&[LAST_NAME]=${contactTemplate.fields.LAST_NAME}`,
+      url: `${bitrix24Url}/crm.contact.list?filter[NAME]=${encodeURIComponent(contactTemplate.fields.NAME)}&[LAST_NAME]=${encodeURIComponent(contactTemplate.fields.LAST_NAME)}`,
       json: true
     }, (error, response, body) => {
       if (error) reject(error);
@@ -380,7 +381,7 @@ function createRejectDeal(tmp) {
 function getContactForReject(tmp) {
   return new Promise((resolve, reject) => {
     request({
-      url: `${bitrix24Url}/crm.contact.list?filter[NAME]=${encodeURIComponent(tmp.fields.NAME)}&[LAST_NAME]=${tmp.fields.LAST_NAME}`,
+      url: `${bitrix24Url}/crm.contact.list?filter[NAME]=${encodeURIComponent(tmp.fields.NAME)}&[LAST_NAME]=${encodeURIComponent(tmp.fields.LAST_NAME)}`,
       json: true
     }, (error, response, body) => {
       if (error) reject(error);

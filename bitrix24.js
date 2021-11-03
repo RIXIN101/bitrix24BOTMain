@@ -115,6 +115,7 @@ exports.getCompany = function(nameCompany, chatId){
   //! then для работы!
   .then((response)=>{
       const text = validateCompanyInfo(response);
+      console.log(text);
       const data = {
           "chat_id": chatId,
           "text": text
@@ -219,20 +220,24 @@ function validateCompanyInfo(objData) {
 
   if (respObj.phone != undefined) {
     successData.successDataPhone = `\nТелефон(-ы): ${respObj.phone}`;
-  }
+  } else successData.successDataPhone = '';
+
   if (respObj.email != undefined) {
     successData.successDataEmail = `\nE-mail(-ы): ${respObj.email}`;
-  }
+  } else successData.successDataEmail = '';
+
   if (respObj.web != undefined) {
     successData.successDataWeb = `\nСайт(-ы): ${respObj.web}`;
-  }
+  } else successData.successDataWeb = '';
+
   if (respObj.adressObject != undefined) {
     successData.successDataAdressObject = `\nАдрес Объекта: ${respObj.adressObject}`;
-  }
+  } else successData.successDataAdressObject = '';
+
   if (respObj.kvt != undefined) {
     successData.successDataKvt = `\nкВт: ${respObj.kvt}`;
-  }
-
-  const successDataRes = successData.successDataPhone + successData.successDataEmail + successData.successDataWeb + successData.successDataAdressObject + successData.successDataKvt;
+  } else successData.successDataKvt = '';
+  
+  const successDataRes = successData.successDataTitle + successData.successDataPhone + successData.successDataEmail + successData.successDataWeb + successData.successDataAdressObject + successData.successDataKvt;
   return successDataRes;
 }
