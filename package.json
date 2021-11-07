@@ -4,7 +4,10 @@
   "description": "",
   "main": "bot.js",
   "scripts": {
-    "start": "nodemon bot.js"
+    "start": "node bot.js"
+  },
+  "engines": {
+    "node": "14.15.3"
   },
   "repository": {
     "type": "git",
