@@ -1,21 +1,17 @@
-// LQookTma2e9Y32cW0dZV  1 pas not test
-// K9Uo1tU8vhCs6W3hfwNn 2 pas not test
+//1 pas test EBW3Zgn5JRh76B5NwAer
+//2 pas test zue65Cr8u8rGPmQIc0Od
 //* Подключение библиотек
 const TelegramBot = require("node-telegram-bot-api");
 const config = require('config');
 const request = require("request");
 const httpBuildQuery = require("http-build-query");
-const crypto = require('crypto');
-const cron = require('node-cron');
-const express = require('express');
-const app = express();
 const robokassa = require('node-robokassa');
-const { response } = require("express");
+//* Создание экземпляра "Робокассы"
 const robokassaHelper = new robokassa.RobokassaHelper({
   merchantLogin: 'MyRenter',
   hashingAlgorithm: 'sha256',
-  password1: 'EBW3Zgn5JRh76B5NwAer', //test
-  password2: 'zue65Cr8u8rGPmQIc0Od', //test
+  password1: 'LQookTma2e9Y32cW0dZV', //real
+  password2: 'K9Uo1tU8vhCs6W3hfwNn', //real
   testMode: true,
   resultUrlRequestMethod: 'GET'
 });
@@ -28,7 +24,7 @@ const bot = new TelegramBot(TOKEN, {
   polling: true,
 });
 
-//* Команда /start
+//* Обработка команды /start (приветствует пользователя)
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(
     msg.chat.id,
@@ -39,7 +35,7 @@ bot.onText(/\/start/, (msg) => {
     `
   );
 });
-//* Команда /help
+//* Обработка команды /help (пишет как пользователю нужно вводить команду)
 bot.onText(/\/help/, (msg) => {
   const { id } = msg.chat;
   const msgObj = 'Напишите _Компания: название компании_ (вводить без точки в конце)';
@@ -47,25 +43,26 @@ bot.onText(/\/help/, (msg) => {
 });
 
 //* Обработка ввода пользователя (Вывод клавиатуры query)
+//* (обрботка правильности ввода команды; обработка того, из скольки слов состоит название компании)
 bot.on('message', msg => {
-  const parseMsg = msg.text.split(' ').join('').split('', 9).join('');
+  const commandEventWord = msg.text.split(' ').join('').split('', 9).join('');
   const { id } = msg.chat;
-  if (parseMsg === 'Компания:') {
+  if (commandEventWord === 'Компания:') {
     match = msg.text.split(' ').join('').split('Компания:');
     newMatch = msg.text.split(' ');
-    resp = match[1];
+    oneWordCompanyName = match[1];
     if (newMatch.length > 2) {
       if (msg.text[8] == ' ' || msg.text[9] != ' ') {
         bot.sendMessage(id, 'Напишите _/help_ для получения информации о вводе команды корректно', {parse_mode: 'Markdown'})
       } else {
-        finMatch = msg.text.split('Компания:').join(' ').split("");
-        for(let i = 0; i < finMatch.length; i++) {
-          if (finMatch[i] == ' ') delete finMatch[i];
+        severalWordCompanyName = msg.text.split('Компания:').join(' ').split("");
+        for(let i = 0; i < severalWordCompanyName.length; i++) {
+          if (severalWordCompanyName[i] == ' ') delete severalWordCompanyName[i];
           else break;
         }
-        checkCompanyAndSendResponse(finMatch.join('')).then(response => {
+        checkCompanyAndSendResponse(severalWordCompanyName.join('')).then(response => {
           if (response == true) {
-            bot.sendMessage(id, `Мы нашли информацию о компании: ${finMatch.join('')}. После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
+            bot.sendMessage(id, `Мы нашли информацию о компании: ${severalWordCompanyName.join('')}. После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
               reply_markup: {
                 inline_keyboard: [
                   [
@@ -118,7 +115,7 @@ bot.on('message', msg => {
                       fields: {
                         NAME: contactTemplate.fields.NAME,
                         LAST_NAME: contactTemplate.fields.LAST_NAME,
-                        COMMENTS: `@${query.from.username} ${finMatch.join('')}`
+                        COMMENTS: `@${query.from.username} ${severalWordCompanyName.join('')}`
                       }
                     }
                     createRejectDeal(rejectContactTmp);
@@ -136,9 +133,9 @@ bot.on('message', msg => {
       if (msg.text[9] != ' ') {
         bot.sendMessage(id, 'Напишите _/help_ для получения информации о вводе команды корректно', {parse_mode: 'Markdown'})
       } else {
-        checkCompanyAndSendResponse(resp).then(response => {
+        checkCompanyAndSendResponse(oneWordCompanyName).then(response => {
           if (response == true) {
-            bot.sendMessage(id, `Мы нашли информацию о компании: ${resp}. После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
+            bot.sendMessage(id, `Мы нашли информацию о компании: ${oneWordCompanyName}. После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
               reply_markup: {
                 inline_keyboard: [
                   [
@@ -191,7 +188,7 @@ bot.on('message', msg => {
                       fields: {
                         NAME: contactTemplate.fields.NAME,
                         LAST_NAME: contactTemplate.fields.LAST_NAME,
-                        COMMENTS: `@${query.from.username} ${resp}`
+                        COMMENTS: `@${query.from.username} ${oneWordCompanyName}`
                       }
                     }
                     createRejectDeal(rejectContactTmp);
@@ -207,23 +204,24 @@ bot.on('message', msg => {
       }
     }
   }
-  if ((parseMsg != 'Компания:' && msg.text != '/help') && msg.text != '/start') {
+  if ((commandEventWord != 'Компания:' && msg.text != '/help') && msg.text != '/start') {
     bot.sendMessage(msg.chat.id, `Введите _/help_ для помощи.`, {parse_mode: 'Markdown'})
   }
 });
 
 
 //* Обработка callback query
+//* (проверка существует ли такая компания; отправка ссылки если компания существует; и создание "ложной сделки" если компания не сущесвтует)
 bot.on('callback_query', query => {
   queryData = query;
   if (query.data == 'Yes') {
     if (newMatch.length > 2 && newMatch[1] != ':') {
-      checkCompanyAndSendResponse(finMatch.join('')).then(response => {
+      checkCompanyAndSendResponse(severalWordCompanyName.join('')).then(response => {
         const contactTemplate = {
           fields: {
               NAME: `${query.from.first_name}`,
               LAST_NAME: `${query.from.last_name}`,
-              COMMENTS: `${query.from.id} ${finMatch.join('')}`,
+              COMMENTS: `${query.from.id} ${severalWordCompanyName.join('')}`,
           }
         };
         if (contactTemplate.fields.LAST_NAME == undefined) {
@@ -233,13 +231,13 @@ bot.on('callback_query', query => {
         createOrder(contactTemplate);
       });
     } else {
-      checkCompanyAndSendResponse(resp).then(response => {
+      checkCompanyAndSendResponse(oneWordCompanyName).then(response => {
         console.log(response);
         const contactTemplate = {
           fields: {
               NAME: query.from.first_name,
               LAST_NAME: query.from.last_name,
-              COMMENTS: `${query.from.id} ${resp}`,
+              COMMENTS: `${query.from.id} ${oneWordCompanyName}`,
           }
         };
         if (contactTemplate.fields.LAST_NAME == undefined) {
@@ -264,7 +262,6 @@ function createOrder(contactTemplate) {
       console.log("Контакт получен");
       createDealAndPaymentURL(dlTmp, contactTemplate).then(response => {
         const ksObjTmp = response;
-        console.log(ksObjTmp);
         console.log('Сделка успешно создана');
         return checkOrderLink(ksObjTmp, contactTemplate);
       })
@@ -276,6 +273,7 @@ function createOrder(contactTemplate) {
     })
   })
 }
+
 //* Создание контакта
 function createContact(cntctTmplte) {
   return new Promise((resolve, reject) => {
@@ -288,6 +286,7 @@ function createContact(cntctTmplte) {
     });
   });
 }
+
 //* Получение контакта
 function getContact(contactTemplate) {
   return new Promise((resolve, reject) => {
@@ -306,7 +305,7 @@ function getContact(contactTemplate) {
             fields: {
                 "TITLE": 'Касса_Оплата_Информации',
                 "CONTACT_ID": body.result[0].ID,
-                "COMMENTS": `${queryData.from.id} ${finMatch.join('')}`,
+                "COMMENTS": `${queryData.from.id} ${severalWordCompanyName.join('')}`,
                 "OPPORTUNITY": amount
             }
           };
@@ -316,7 +315,7 @@ function getContact(contactTemplate) {
             fields: {
                 "TITLE": 'Касса_Оплата_Информации',
                 "CONTACT_ID": body.result[0].ID,
-                "COMMENTS": `${queryData.from.id} ${resp}`,
+                "COMMENTS": `${queryData.from.id} ${oneWordCompanyName}`,
                 "OPPORTUNITY": amount
             }
           };
@@ -328,6 +327,7 @@ function getContact(contactTemplate) {
     });
   });
 }
+
 //* Создание сделки и ссылки на оплату
 function createDealAndPaymentURL(dealTemplate, contactTemplate) {
   return new Promise((resolve, reject) => {
@@ -354,22 +354,23 @@ function createDealAndPaymentURL(dealTemplate, contactTemplate) {
     });
   });
 }
-//* Проверяет пустая ли ссылка или нет
+
+//* Проверяет пустая ли ссылка или нет (Promise {object})
 function checkOrderLink(kassaObjTemp) {
   return new Promise((resolve, reject) => {
     if (kassaObjTemp != '') {
       const orderLink = `<a href="${kassaObjTemp}">Ссылка на оплату</a>`
       resolve(orderLink);
     } else {
-      console.log("Опять что-то не работает");
+      console.log("Ордер не создался");
       resolve("Сделка не создалась");
     }
   });
 }
 
-//* Если название такой компании скрипт не нашёл
+//* Если название такой компании скрипт не нашёл (main сhaining function for this function tree)
 function createRejectDeal(tmp) {
-  console.log("Создалась отказанная сделка")
+  console.log("Создалась отказанная сделка");
   createContact(tmp).then(response => {
     console.log("Контакт создался.");
     getContactForReject(tmp).then(response => {
@@ -399,7 +400,7 @@ function getContactForReject(tmp) {
             fields: {
                 "TITLE": 'Касса_Отказ_Оплаты_Информации',
                 "CONTACT_ID": body.result[0].ID,
-                "COMMENTS": `@${queryData.from.username} ${finMatch.join('')}`,
+                "COMMENTS": `@${queryData.from.username} ${severalWordCompanyName.join('')}`,
                 "OPPORTUNITY": 0
             }
           };
@@ -409,7 +410,7 @@ function getContactForReject(tmp) {
             fields: {
                 "TITLE": 'Касса_Отказ_Оплаты_Информации',
                 "CONTACT_ID": body.result[0].ID,
-                "COMMENTS": `@${queryData.from.username} ${resp}`,
+                "COMMENTS": `@${queryData.from.username} ${oneWordCompanyName}`,
                 "OPPORTUNITY": 0
             }
           };
@@ -420,6 +421,7 @@ function getContactForReject(tmp) {
   });
 }
 
+//* Создание сделки (object)
 function createDeal(dealTemplate) {
   return new Promise((resolve, reject) => {
     request({
@@ -433,6 +435,7 @@ function createDeal(dealTemplate) {
   })
 }
 
+//* Проверяет существует ли компания (bool)
 function checkCompanyAndSendResponse(companyName) {
   return new Promise((resolve, reject) => {
     request({
@@ -448,4 +451,3 @@ function checkCompanyAndSendResponse(companyName) {
     })
   })
 }
-
