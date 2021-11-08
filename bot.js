@@ -235,7 +235,6 @@ bot.on('callback_query', query => {
       });
     } else {
       checkCompanyAndSendResponse(oneWordCompanyName).then(response => {
-        console.log(response);
         const contactTemplate = {
           fields: {
               NAME: query.from.first_name,
@@ -325,8 +324,6 @@ function getContact(contactTemplate) {
           resolve(dealTemp);
         }
       }
-
-      console.log(body);
     });
   });
 }
