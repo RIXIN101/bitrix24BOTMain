@@ -1,5 +1,8 @@
-//1 pas test EBW3Zgn5JRh76B5NwAer
-//2 pas test zue65Cr8u8rGPmQIc0Od
+//1 pas test YE8wIF77oPpz5XGUQ4Zq
+//2 pas test TelXsF8GA2wT08Eeftp0
+
+// 1 no test rG4iwygid1a42aG9NXVc
+// 2 no test i4q9JGe09FOVhEZszu3f
 //* Подключение библиотек
 const TelegramBot = require("node-telegram-bot-api");
 const config = require('config');
@@ -10,8 +13,8 @@ const robokassa = require('node-robokassa');
 const robokassaHelper = new robokassa.RobokassaHelper({
   merchantLogin: 'MyRenter',
   hashingAlgorithm: 'sha256',
-  password1: 'LQookTma2e9Y32cW0dZV', //real
-  password2: 'K9Uo1tU8vhCs6W3hfwNn', //real
+  password1: 'YE8wIF77oPpz5XGUQ4Zq',
+  password2: 'TelXsF8GA2wT08Eeftp0',
   testMode: true,
   resultUrlRequestMethod: 'GET'
 });
