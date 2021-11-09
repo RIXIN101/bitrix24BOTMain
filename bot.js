@@ -205,8 +205,8 @@ bot.on('callback_query', query => {
     if (querySucData.data == 'Yes2') {
       const rejectContactTmp = {
         fields: {
-          NAME: contactTemplate.fields.NAME,
-          LAST_NAME: contactTemplate.fields.LAST_NAME,
+          NAME: query.from.NAME,
+          LAST_NAME: query.from.LAST_NAME,
           COMMENTS: `@${query.from.username} ${severalWordCompanyName.join('')}`
         }
       }
@@ -237,8 +237,8 @@ bot.on('callback_query', query => {
     if (query.data == 'Yes3') {
       const rejectContactTmp = {
         fields: {
-          NAME: contactTemplate.fields.NAME,
-          LAST_NAME: contactTemplate.fields.LAST_NAME,
+          NAME: query.from.NAME,
+          LAST_NAME: query.from.LAST_NAME,
           COMMENTS: `@${query.from.username} ${oneWordCompanyName}`
         }
       }
