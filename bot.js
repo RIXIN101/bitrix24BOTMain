@@ -94,41 +94,6 @@ bot.on('message', msg => {
                 ],
               },
             });
-            bot.on('callback_query', query => {
-              if (query.data == 'review') {
-                bot.sendMessage(query.from.id, 'Подтвердите согласие на обработку персональных данных для того, чтобы мы связались с вами потом.', {
-                  reply_markup: {
-                    inline_keyboard: [
-                      [
-                        {
-                          text: "Да",
-                          callback_data: "Yes2",
-                        },
-                        {
-                          text: "Нет",
-                          callback_data: "No2",
-                        },
-                      ],
-                    ],
-                  },
-                })
-                bot.on('callback_query', querySucData => {
-                  if (querySucData.data == 'Yes2') {
-                    const rejectContactTmp = {
-                      fields: {
-                        NAME: contactTemplate.fields.NAME,
-                        LAST_NAME: contactTemplate.fields.LAST_NAME,
-                        COMMENTS: `@${query.from.username} ${severalWordCompanyName.join('')}`
-                      }
-                    }
-                    createRejectDeal(rejectContactTmp);
-                  }
-                  if (querySucData.data == 'No2') {
-                    bot.sendMessage(querySucData.from.id, 'Попробуйте ввести название компании на латиннице или на кириллице.');
-                  }
-                })
-              }
-            });
           }
         });
       }
@@ -166,41 +131,6 @@ bot.on('message', msg => {
                   ],
                 ],
               },
-            });
-            bot.on('callback_query', query => {
-              if (query.data == 'review') {
-                bot.sendMessage(query.from.id, 'Подтвердите согласие на обработку персональных данных для того, чтобы мы связались с вами потом.', {
-                  reply_markup: {
-                    inline_keyboard: [
-                      [
-                        {
-                          text: "Да",
-                          callback_data: "Yes3",
-                        },
-                        {
-                          text: "Нет",
-                          callback_data: "No3",
-                        },
-                      ],
-                    ],
-                  },
-                })
-                bot.on('callback_query', querySucData => {
-                  if (querySucData.data == 'Yes3') {
-                    const rejectContactTmp = {
-                      fields: {
-                        NAME: contactTemplate.fields.NAME,
-                        LAST_NAME: contactTemplate.fields.LAST_NAME,
-                        COMMENTS: `@${query.from.username} ${oneWordCompanyName}`
-                      }
-                    }
-                    createRejectDeal(rejectContactTmp);
-                  }
-                  if (querySucData.data == 'No3') {
-                    bot.sendMessage(querySucData.from.id, 'Попробуйте ввести название компании на латиннице или на кириллице.');
-                  }
-                })
-              }
             });
           }
         });
@@ -252,6 +182,71 @@ bot.on('callback_query', query => {
   }
   if (query.data == 'No') {
     bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
+  }
+  if (newMatch > 2) {
+    if (query.data == 'review') {
+      bot.sendMessage(query.from.id, 'Подтвердите согласие на обработку персональных данных для того, чтобы мы связались с вами потом.', {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "Да",
+                callback_data: "Yes2",
+              },
+              {
+                text: "Нет",
+                callback_data: "No2",
+              },
+            ],
+          ],
+        },
+      })
+    }
+    if (querySucData.data == 'Yes2') {
+      const rejectContactTmp = {
+        fields: {
+          NAME: contactTemplate.fields.NAME,
+          LAST_NAME: contactTemplate.fields.LAST_NAME,
+          COMMENTS: `@${query.from.username} ${severalWordCompanyName.join('')}`
+        }
+      }
+      createRejectDeal(rejectContactTmp);
+    }
+    if (querySucData.data == 'No2') {
+      bot.sendMessage(querySucData.from.id, 'Попробуйте ввести название компании на латиннице или на кириллице.');
+    }
+  } else {
+    if (query.data == 'review') {
+      bot.sendMessage(query.from.id, 'Подтвердите согласие на обработку персональных данных для того, чтобы мы связались с вами потом.', {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "Да",
+                callback_data: "Yes3",
+              },
+              {
+                text: "Нет",
+                callback_data: "No3",
+              },
+            ],
+          ],
+        },
+      })
+    }
+    if (query.data == 'Yes3') {
+      const rejectContactTmp = {
+        fields: {
+          NAME: contactTemplate.fields.NAME,
+          LAST_NAME: contactTemplate.fields.LAST_NAME,
+          COMMENTS: `@${query.from.username} ${oneWordCompanyName}`
+        }
+      }
+      createRejectDeal(rejectContactTmp);
+    }
+    if (query.data == 'No3') {
+      bot.sendMessage(query.from.id, 'Попробуйте ввести название компании на латиннице или на кириллице.');
+    }
   }
 });
 
