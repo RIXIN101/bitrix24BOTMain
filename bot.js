@@ -175,18 +175,18 @@ bot.on('message', msg => {
                       [
                         {
                           text: "Да",
-                          callback_data: "Yes2",
+                          callback_data: "Yes3",
                         },
                         {
                           text: "Нет",
-                          callback_data: "No2",
+                          callback_data: "No3",
                         },
                       ],
                     ],
                   },
                 })
                 bot.on('callback_query', querySucData => {
-                  if (querySucData.data == 'Yes2') {
+                  if (querySucData.data == 'Yes3') {
                     const rejectContactTmp = {
                       fields: {
                         NAME: contactTemplate.fields.NAME,
@@ -196,7 +196,7 @@ bot.on('message', msg => {
                     }
                     createRejectDeal(rejectContactTmp);
                   }
-                  if (querySucData.data == 'No2') {
+                  if (querySucData.data == 'No3') {
                     bot.sendMessage(querySucData.from.id, 'Попробуйте ввести название компании на латиннице или на кириллице.');
                   }
                 })
