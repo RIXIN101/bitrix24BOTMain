@@ -142,6 +142,9 @@ bot.on('message', msg => {
   }
 });
 
+bot.on('polling_error', err => {
+  console.log(err);
+});
 
 //* Обработка callback query
 //* (проверка существует ли такая компания; отправка ссылки если компания существует; и создание "ложной сделки" если компания не сущесвтует)
@@ -183,7 +186,7 @@ bot.on('callback_query', query => {
   if (query.data == 'No') {
     bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
   }
-  if (newMatch > 2) {
+  if (newMatch.length > 2) {
     if (query.data == 'review') {
       bot.sendMessage(query.from.id, 'Подтвердите согласие на обработку персональных данных для того, чтобы мы связались с вами потом.', {
         reply_markup: {
@@ -200,19 +203,22 @@ bot.on('callback_query', query => {
             ],
           ],
         },
-      })
+      });
     }
-    if (querySucData.data == 'Yes2') {
+    if (query.data == 'Yes2') {
       const rejectContactTmp = {
         fields: {
-          NAME: query.from.NAME,
-          LAST_NAME: query.from.LAST_NAME,
+          NAME: query.from.first_name,
+          LAST_NAME: query.from.last_name,
           COMMENTS: `@${query.from.username} ${severalWordCompanyName.join('')}`
         }
       }
+      if (query.from.last_name == undefined) {
+        rejectContactTmp.fields.LAST_NAME = '';
+      }
       createRejectDeal(rejectContactTmp);
     }
-    if (querySucData.data == 'No2') {
+    if (query.data == 'No2') {
       bot.sendMessage(querySucData.from.id, 'Попробуйте ввести название компании на латиннице или на кириллице.');
     }
   } else {
@@ -237,10 +243,13 @@ bot.on('callback_query', query => {
     if (query.data == 'Yes3') {
       const rejectContactTmp = {
         fields: {
-          NAME: query.from.NAME,
-          LAST_NAME: query.from.LAST_NAME,
+          NAME: query.from.first_name,
+          LAST_NAME: query.from.last_name,
           COMMENTS: `@${query.from.username} ${oneWordCompanyName}`
         }
+      }
+      if (query.from.last_name == undefined) {
+        rejectContactTmp.fields.LAST_NAME = '';
       }
       createRejectDeal(rejectContactTmp);
     }
