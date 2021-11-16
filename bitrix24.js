@@ -69,12 +69,16 @@ return new Promise((resolve, reject)=>{
         if (body.result == false) {
           resolve(false);
         } else {
+          for(let i = 0; i < body.result.length; i++) {
+            
+          }
           const contactId = body.result[0].CONTACT_ID;
           resolve(contactId);
         }
     });
 })
 }
+
 //* Валидация данных контакта
 function validateContactInfo(response) {
   const respObj = {
@@ -106,6 +110,13 @@ function validateContactInfo(response) {
   const successContactDataResp = successContactData.Title + successContactData.Email + successContactData.Phone;
   return successContactDataResp;
 }
+
+
+
+
+
+
+
 
 //* Получение основной информации о компании
 exports.getCompany = function(nameCompany, chatId){
@@ -245,23 +256,59 @@ function validateCompanyInfo(objData) {
 
 exports.someInfoCompany = function(nameCompany, chatId) {
   getCompanyIdByName(nameCompany).then((response) => {
+    console.log(response);
     let id = response.result[0].ID;
-    return getCompanyById(id);
+    return getCompanyById(id)
   }).then(response => {
-    const text = validateSomeInfoCompany(response);
-      const data = {
+    const companyData = response;
+    contactCounter(response.result.ID).then(response => {
+      if (response != 0) {
+        const text = `${validateSomeInfoCompany(companyData)}\nКоличество привязанных контактов: ${response}`;
+        const data = {
           "chat_id": chatId,
           "text": text
-      };
-      request.post({
-          url: `https://api.telegram.org/bot${TOKEN}/sendMessage`,
-          body: data,
-          json: true
-      }, (error, response, body) => {
-          if (error) console.log(error);
-          else console.log('Неполные данные компании отправлены')
+        };
+        request.post({
+            url: `https://api.telegram.org/bot${TOKEN}/sendMessage`,
+            body: data,
+            json: true
+        }, (error, response, body) => {
+            if (error) console.log(error);
+            else console.log('Неполные данные компании отправлены')
+        });
+      } else {
+        const text = `${validateSomeInfoCompany(companyData)}`;
+        const data = {
+          "chat_id": chatId,
+          "text": text
+        };
+        request.post({
+            url: `https://api.telegram.org/bot${TOKEN}/sendMessage`,
+            body: data,
+            json: true
+        }, (error, response, body) => {
+            if (error) console.log(error);
+            else console.log('Неполные данные компании отправлены')
+        });
+      }
+    });
+  })
+}
+
+function contactCounter(companyId) {
+  return new Promise((resolve, reject)=>{
+    request({
+      url: `${bitrix24Url}/crm.company.contact.items.get?id=${companyId}`,
+      json: true
+    }, (error, response, body) => {
+          if(error) reject(error)
+          if (body.result == false) {
+            resolve(0);
+          } else {
+            resolve(body.result.length);
+          }
       });
-  });
+  })
 }
 
 function validateSomeInfoCompany(objData) {
