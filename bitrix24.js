@@ -1,4 +1,5 @@
 const config = require('config');
+const { response } = require('express');
 const request = require("request");
 var exports = module.exports = {};
 const bitrix24Url = config.get('bitrix24Url');
@@ -237,7 +238,73 @@ function validateCompanyInfo(objData) {
   if (respObj.kvt != undefined) {
     successData.successDataKvt = `\nкВт: ${respObj.kvt}`;
   } else successData.successDataKvt = '';
-  
+
   const successDataRes = successData.successDataTitle + successData.successDataPhone + successData.successDataEmail + successData.successDataWeb + successData.successDataAdressObject + successData.successDataKvt;
   return successDataRes;
 }
+
+exports.someInfoCompany = function(nameCompany, chatId) {
+  getCompanyIdByName(nameCompany).then((response) => {
+    let id = response.result[0].ID;
+    return getCompanyById(id);
+  }).then(response => {
+    const text = validateSomeInfoCompany(response);
+      const data = {
+          "chat_id": chatId,
+          "text": text
+      };
+      request.post({
+          url: `https://api.telegram.org/bot${TOKEN}/sendMessage`,
+          body: data,
+          json: true
+      }, (error, response, body) => {
+          if (error) console.log(error);
+          else console.log('Неполные данные компании отправлены')
+      });
+  });
+}
+
+function validateSomeInfoCompany(objData) {
+  let someInfoCompanyData = {
+    title: '',
+    phone: '',
+    email: '',
+    web: ''
+  };
+  if (objData.result.TITLE != undefined) someInfoCompanyData.title = '✅';
+  else someInfoCompanyData.title = 'No';
+  if (objData.result.HAS_PHONE == 'Y') someInfoCompanyData.phone = '✅';
+  else someInfoCompanyData.phone = 'No';
+  if (objData.result.HAS_EMAIL == 'Y') someInfoCompanyData.email = '✅';
+  else someInfoCompanyData.email = 'No';
+  if (objData.result.WEB != undefined) someInfoCompanyData.web = '✅';
+  else someInfoCompanyData.web = 'No';
+
+  let someInfoCompanyDataNotCheck = {
+    title: `Название компании: ${someInfoCompanyData.title}`,
+    phone: `Телефон: ${someInfoCompanyData.phone}`,
+    email: `E-mail: ${someInfoCompanyData.email}`,
+    web: `Сайт: ${someInfoCompanyData.web}`
+  }
+
+  if (someInfoCompanyData.title == 'No') {
+    delete someInfoCompanyDataNotCheck.title;
+    if (someInfoCompanyDataNotCheck.title == undefined) someInfoCompanyDataNotCheck.title = '';
+  }
+  if (someInfoCompanyData.phone == 'No') {
+    delete someInfoCompanyDataNotCheck.phone;
+    if (someInfoCompanyDataNotCheck.phone == undefined) someInfoCompanyDataNotCheck.phone = '';
+  }
+  if (someInfoCompanyData.email == 'No') {
+    delete someInfoCompanyDataNotCheck.email;
+    if (someInfoCompanyDataNotCheck.email == undefined) someInfoCompanyDataNotCheck.email = '';
+  }
+  if (someInfoCompanyData.web == 'No') {
+    delete someInfoCompanyDataNotCheck.web;
+    if (someInfoCompanyDataNotCheck.web == undefined) someInfoCompanyDataNotCheck.web = '';
+  }
+
+  someInfoCompanyDataParsed = `${someInfoCompanyDataNotCheck.title}\n${someInfoCompanyDataNotCheck.phone}\n${someInfoCompanyDataNotCheck.email}\n${someInfoCompanyDataNotCheck.web}`;
+  return someInfoCompanyDataParsed
+}
+

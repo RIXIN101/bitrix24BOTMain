@@ -9,6 +9,7 @@ const config = require('config');
 const request = require("request");
 const httpBuildQuery = require("http-build-query");
 const robokassa = require('node-robokassa');
+const bitrix24 = require('./bitrix24');
 //* Создание экземпляра "Робокассы"
 const robokassaHelper = new robokassa.RobokassaHelper({
   merchantLogin: 'MyRenter',
@@ -64,24 +65,29 @@ bot.on('message', msg => {
           if (severalWordCompanyName[i] == ' ') delete severalWordCompanyName[i];
           else break;
         }
+        bot.sendMessage(id, `Мы проверяем наличие компание в нашей базе...`)
         checkCompanyAndSendResponse(severalWordCompanyName.join('')).then(response => {
           if (response == true) {
-            bot.sendMessage(id, `Мы нашли информацию о компании: ${severalWordCompanyName.join('')}. После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    {
-                      text: "Да",
-                      callback_data: "Yes",
-                    },
-                    {
-                      text: "Нет",
-                      callback_data: "No",
-                    },
+            bot.sendMessage(id, `Найдена информация о компании: ${severalWordCompanyName.join('')}`);
+            bitrix24.someInfoCompany(severalWordCompanyName.join(''), id);
+            setTimeout(() => {
+              bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
+                reply_markup: {
+                  inline_keyboard: [
+                    [
+                      {
+                        text: "Да",
+                        callback_data: "Yes",
+                      },
+                      {
+                        text: "Нет",
+                        callback_data: "No",
+                      },
+                    ],
                   ],
-                ],
-              },
-            });
+                },
+              });
+            }, 500)
           } else {
             bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
               reply_markup: {
@@ -104,22 +110,26 @@ bot.on('message', msg => {
       } else {
         checkCompanyAndSendResponse(oneWordCompanyName).then(response => {
           if (response == true) {
-            bot.sendMessage(id, `Мы нашли информацию о компании: ${oneWordCompanyName}. После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    {
-                      text: "Да",
-                      callback_data: "Yes",
-                    },
-                    {
-                      text: "Нет",
-                      callback_data: "No",
-                    },
+            bot.sendMessage(id, `Найдена информация о компании: ${oneWordCompanyName}`);
+            bitrix24.someInfoCompany(oneWordCompanyName, id);
+            setTimeout(() => {
+              bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
+                reply_markup: {
+                  inline_keyboard: [
+                    [
+                      {
+                        text: "Да",
+                        callback_data: "Yes",
+                      },
+                      {
+                        text: "Нет",
+                        callback_data: "No",
+                      },
+                    ],
                   ],
-                ],
-              },
-            });
+                },
+              });
+            }, 630)
           } else {
             bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
               reply_markup: {
@@ -456,3 +466,4 @@ function checkCompanyAndSendResponse(companyName) {
     })
   })
 }
+
