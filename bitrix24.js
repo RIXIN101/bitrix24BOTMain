@@ -307,4 +307,3 @@ function validateSomeInfoCompany(objData) {
   someInfoCompanyDataParsed = `${someInfoCompanyDataNotCheck.title}\n${someInfoCompanyDataNotCheck.phone}\n${someInfoCompanyDataNotCheck.email}\n${someInfoCompanyDataNotCheck.web}`;
   return someInfoCompanyDataParsed
 }
-
