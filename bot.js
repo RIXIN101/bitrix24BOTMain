@@ -65,9 +65,9 @@ bot.on('message', msg => {
           if (severalWordCompanyName[i] == ' ') delete severalWordCompanyName[i];
           else break;
         }
-        bot.sendMessage(id, `Мы проверяем наличие компание в нашей базе...`)
         checkCompanyAndSendResponse(severalWordCompanyName.join('')).then(response => {
           if (response == true) {
+            bot.sendMessage(id, `Мы проверяем наличие компание в нашей базе...`)
             bot.sendMessage(id, `Найдена информация о компании: ${severalWordCompanyName.join('')}`);
             bitrix24.someInfoCompany(severalWordCompanyName.join(''), id);
             setTimeout(() => {
@@ -109,9 +109,9 @@ bot.on('message', msg => {
       if (msg.text[9] != ' ') {
         bot.sendMessage(id, 'Напишите _/help_ для получения информации о вводе команды корректно', {parse_mode: 'Markdown'})
       } else {
-        bot.sendMessage(id, `Мы проверяем наличие компание в нашей базе...`);
         checkCompanyAndSendResponse(oneWordCompanyName).then(response => {
           if (response == true) {
+            bot.sendMessage(id, `Мы проверяем наличие компание в нашей базе...`)
             bot.sendMessage(id, `Найдена информация о компании: ${oneWordCompanyName}`);
             bitrix24.someInfoCompany(oneWordCompanyName, id);
             setTimeout(() => {
