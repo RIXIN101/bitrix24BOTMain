@@ -6,7 +6,7 @@ const bitrix24Url = config.get('bitrix24Url');
 const TOKEN = config.get('TOKEN');
 
 //* Получение контакта
-exports.getContacts = function(nameCompany, chatId){
+/* exports.getContacts = function(nameCompany, chatId){
 getCompanyIdByName(nameCompany).then((response) => {
   const companyId = response.result[0].ID;
   getContactByCompanyId(companyId, chatId).then(response => {
@@ -45,17 +45,49 @@ getCompanyIdByName(nameCompany).then((response) => {
     }
   })
 })
-}
+} */
 
-function getContactByContactId(contactId) {
+exports.getContacts = function(nameCompany, chatId){
+  getCompanyIdByName(nameCompany).then((response) => {
+    const companyId = response.result[0].ID;
+    getContactByCompanyId(companyId, chatId).then(response => {
+      return getContactByContactId(response);
+    })
+    //! then для работы!
+    .then((response)=>{
+      let text = ``;
+      for(let i = 0; i < response.length; i++) {
+        text += `${response[i]}\n`;
+      }
+      const data = {
+          "chat_id": chatId,
+          "text": text
+      };
+      request.post({
+          url: `https://api.telegram.org/bot${TOKEN}/sendMessage`,
+          body: data,
+          json: true
+      }, (error, response, body) => {
+          if (error) console.log(error);
+          else console.log('Данные контакта отправлены')
+      });
+    })
+  })
+  }
+
+function getContactByContactId(contactsIdArray) {
 return new Promise((resolve, reject)=>{
-  request({
-    url: `${bitrix24Url}/crm.contact.get?id=${contactId}`,
-    json: true
-  }, (error, response, body) => {
-        if(error) reject(error)
-        resolve(body);
+  const contactInfo = [];
+  for(let i = 0; i < contactsIdArray.length; i++) {
+    request({
+      url: `${bitrix24Url}/crm.contact.get?id=${contactsIdArray[i]}`,
+      json: true
+    }, (error, response, body) => {
+          if(error) reject(error)
+          contactInfo.push(validateContactInfo(body));
+          if (contactInfo.length == contactsIdArray.length) resolve(contactInfo)
     });
+  }
 })
 }
 
@@ -69,16 +101,15 @@ return new Promise((resolve, reject)=>{
         if (body.result == false) {
           resolve(false);
         } else {
+          const contactsIdArr = [];
           for(let i = 0; i < body.result.length; i++) {
-            
+            contactsIdArr.push(body.result[i].CONTACT_ID);
           }
-          const contactId = body.result[0].CONTACT_ID;
-          resolve(contactId);
+          resolve(contactsIdArr);
         }
     });
 })
 }
-
 //* Валидация данных контакта
 function validateContactInfo(response) {
   const respObj = {
@@ -99,7 +130,8 @@ function validateContactInfo(response) {
   }
   const successContactData = {
     Title: `\nКонтакт привязаный к компании`,
-  }
+    NameAndLastName: `\nИмя: ${response.result.NAME} ${response.result.LAST_NAME}`
+  };
   if (respObj.phone != undefined) {
     successContactData.Phone = `\nТелефон: ${respObj.phone}`;
   } else successContactData.Phone = '';
@@ -107,16 +139,9 @@ function validateContactInfo(response) {
     successContactData.Email = `\nE-mail: ${respObj.email}`;
   } else successContactData.Email = '';
 
-  const successContactDataResp = successContactData.Title + successContactData.Email + successContactData.Phone;
+  const successContactDataResp = successContactData.Title + successContactData.NameAndLastName + successContactData.Email + successContactData.Phone;
   return successContactDataResp;
 }
-
-
-
-
-
-
-
 
 //* Получение основной информации о компании
 exports.getCompany = function(nameCompany, chatId){
