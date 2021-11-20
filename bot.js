@@ -10,6 +10,8 @@ const request = require("request");
 const httpBuildQuery = require("http-build-query");
 const robokassa = require('node-robokassa');
 const bitrix24 = require('./bitrix24');
+const cyrillicToTranslit = require('cyrillic-to-translit-js');
+const translitInRus = new cyrillicToTranslit();
 //* Создание экземпляра "Робокассы"
 const robokassaHelper = new robokassa.RobokassaHelper({
   merchantLogin: 'MyRenter',
@@ -23,6 +25,11 @@ const robokassaHelper = new robokassa.RobokassaHelper({
 const amount = config.get('amount');
 const bitrix24Url = config.get('bitrix24Url');
 const TOKEN = config.get('TOKEN');
+
+const isCyrillic = function (str) {
+  return /[а-я]/i.test(str);
+}
+
 //* Создание бота
 const bot = new TelegramBot(TOKEN, {
   polling: true,
@@ -40,6 +47,7 @@ bot.onText(/\/start/, (msg) => {
     `
   , {parse_mode: 'Markdown'});
 });
+
 //* Обработка команды /help (пишет как пользователю нужно вводить команду)
 bot.onText(/\/help/, (msg) => {
   const { id } = msg.chat;
@@ -68,39 +76,104 @@ bot.on('message', msg => {
         bot.sendMessage(id, `Мы проверяем наличие компание в нашей базе...`)
         checkCompanyAndSendResponse(severalWordCompanyName.join('')).then(response => {
           if (response == true) {
-            bot.sendMessage(id, `Найдена информация о компании: ${severalWordCompanyName.join('')}`);
-            bitrix24.someInfoCompany(severalWordCompanyName.join(''), id);
-            setTimeout(() => {
-              bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
-                reply_markup: {
-                  inline_keyboard: [
-                    [
-                      {
-                        text: "Да",
-                        callback_data: "Yes",
-                      },
-                      {
-                        text: "Нет",
-                        callback_data: "No",
-                      },
+              bot.sendMessage(id, `Найдена информация о компании: ${severalWordCompanyName.join('')}`);
+              bitrix24.someInfoCompany(severalWordCompanyName.join(''), id);
+              setTimeout(() => {
+                bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
+                  reply_markup: {
+                    inline_keyboard: [
+                      [
+                        {
+                          text: "Да",
+                          callback_data: "Yes",
+                        },
+                        {
+                          text: "Нет",
+                          callback_data: "No",
+                        },
+                      ],
                     ],
-                  ],
-                },
-              });
-            }, 1855)
+                  },
+                });
+              }, 1855)
           } else {
-            bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    {
-                      text: "Оставить заявку",
-                      callback_data: "review",
+            if (isCyrillic(severalWordCompanyName.join('')) == true) {
+              checkCompanyAndSendResponse(translitInRus.transform(severalWordCompanyName.join(''))).then(response => {
+                if (response == true) {
+                  bot.sendMessage(id, `Найдена информация о компании: ${translitInRus.transform(severalWordCompanyName.join(''))}`);
+                  bitrix24.someInfoCompany(translitInRus.transform(severalWordCompanyName.join('')), id);
+                  setTimeout(() => {
+                    bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
+                      reply_markup: {
+                        inline_keyboard: [
+                          [
+                            {
+                              text: "Да",
+                              callback_data: "Yes",
+                            },
+                            {
+                              text: "Нет",
+                              callback_data: "No",
+                            },
+                          ],
+                        ],
+                      },
+                    });
+                  }, 1855)
+                } else {
+                  bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
+                    reply_markup: {
+                      inline_keyboard: [
+                        [
+                          {
+                            text: "Оставить заявку",
+                            callback_data: "review",
+                          },
+                        ],
+                      ],
                     },
-                  ],
-                ],
-              },
-            });
+                  });
+                }
+              });
+            } else {
+              checkCompanyAndSendResponse(translitInRus.reverse(severalWordCompanyName.join(''))).then(response => {
+                if (response == true) {
+                  bot.sendMessage(id, `Найдена информация о компании: ${translitInRus.reverse(severalWordCompanyName.join(''))}`);
+                  bitrix24.someInfoCompany(translitInRus.reverse(severalWordCompanyName.join('')), id);
+                  setTimeout(() => {
+                    bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
+                      reply_markup: {
+                        inline_keyboard: [
+                          [
+                            {
+                              text: "Да",
+                              callback_data: "Yes",
+                            },
+                            {
+                              text: "Нет",
+                              callback_data: "No",
+                            },
+                          ],
+                        ],
+                      },
+                    });
+                  }, 1855)
+                } else {
+                  bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
+                    reply_markup: {
+                      inline_keyboard: [
+                        [
+                          {
+                            text: "Оставить заявку",
+                            callback_data: "review",
+                          },
+                        ],
+                      ],
+                    },
+                  });
+                }
+              })
+            }
           }
         });
       }
@@ -111,39 +184,104 @@ bot.on('message', msg => {
         bot.sendMessage(id, `Мы проверяем наличие компание в нашей базе...`)
         checkCompanyAndSendResponse(oneWordCompanyName).then(response => {
           if (response == true) {
-            bot.sendMessage(id, `Найдена информация о компании: ${oneWordCompanyName}`);
-            bitrix24.someInfoCompany(oneWordCompanyName, id);
-            setTimeout(() => {
-              bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
-                reply_markup: {
-                  inline_keyboard: [
-                    [
-                      {
-                        text: "Да",
-                        callback_data: "Yes",
-                      },
-                      {
-                        text: "Нет",
-                        callback_data: "No",
-                      },
+              bot.sendMessage(id, `Найдена информация о компании: ${oneWordCompanyName}`);
+              bitrix24.someInfoCompany(oneWordCompanyName, id);
+              setTimeout(() => {
+                bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
+                  reply_markup: {
+                    inline_keyboard: [
+                      [
+                        {
+                          text: "Да",
+                          callback_data: "Yes",
+                        },
+                        {
+                          text: "Нет",
+                          callback_data: "No",
+                        },
+                      ],
                     ],
-                  ],
-                },
-              });
-            }, 1855)
+                  },
+                });
+              }, 1855)
           } else {
-            bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    {
-                      text: "Оставить заявку",
-                      callback_data: "review",
+            if (isCyrillic(oneWordCompanyName) == true) {
+              checkCompanyAndSendResponse(translitInRus.transform(oneWordCompanyName)).then(response => {
+                if (response == true) {
+                  bot.sendMessage(id, `Найдена информация о компании: ${translitInRus.transform(oneWordCompanyName)}`);
+                  bitrix24.someInfoCompany(translitInRus.transform(oneWordCompanyName), id);
+                  setTimeout(() => {
+                    bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
+                      reply_markup: {
+                        inline_keyboard: [
+                          [
+                            {
+                              text: "Да",
+                              callback_data: "Yes",
+                            },
+                            {
+                              text: "Нет",
+                              callback_data: "No",
+                            },
+                          ],
+                        ],
+                      },
+                    });
+                  }, 1855)
+                } else {
+                  bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
+                    reply_markup: {
+                      inline_keyboard: [
+                        [
+                          {
+                            text: "Оставить заявку",
+                            callback_data: "review",
+                          },
+                        ],
+                      ],
                     },
-                  ],
-                ],
-              },
-            });
+                  });
+                }
+              });
+            } else {
+              checkCompanyAndSendResponse(translitInRus.reverse(oneWordCompanyName)).then(response => {
+                if (response == true) {
+                  bot.sendMessage(id, `Найдена информация о компании: ${translitInRus.reverse(oneWordCompanyName)}`);
+                  bitrix24.someInfoCompany(translitInRus.reverse(oneWordCompanyName), id);
+                  setTimeout(() => {
+                    bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
+                      reply_markup: {
+                        inline_keyboard: [
+                          [
+                            {
+                              text: "Да",
+                              callback_data: "Yes",
+                            },
+                            {
+                              text: "Нет",
+                              callback_data: "No",
+                            },
+                          ],
+                        ],
+                      },
+                    });
+                  }, 1855)
+                } else {
+                  bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
+                    reply_markup: {
+                      inline_keyboard: [
+                        [
+                          {
+                            text: "Оставить заявку",
+                            callback_data: "review",
+                          },
+                        ],
+                      ],
+                    },
+                  });
+                }
+              })
+            }
           }
         });
       }
@@ -152,10 +290,6 @@ bot.on('message', msg => {
   if ((commandEventWord != 'Компания:' && msg.text != '/help') && msg.text != '/start') {
     bot.sendMessage(msg.chat.id, `Введите _/help_ для помощи.`, {parse_mode: 'Markdown'})
   }
-});
-
-bot.on('polling_error', err => {
-  console.log(err);
 });
 
 //* Обработка callback query
@@ -467,4 +601,3 @@ function checkCompanyAndSendResponse(companyName) {
     })
   })
 }
-
