@@ -297,6 +297,7 @@ bot.on('message', msg => {
 bot.on('callback_query', query => {
   queryData = query;
   if (query.data == 'severalWordCompanyYes') {
+    console.log('Несколько слов ', severalWordCompanyName.join(''));
     const contactTemplate = {
       fields: {
           NAME: `${query.from.first_name}`,
@@ -314,6 +315,7 @@ bot.on('callback_query', query => {
     bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
   }
   if (query.data == 'severalWordCompanyTranslitCyrYes') {
+    console.log('Несколько слов с рус на анг ', translitInRus.transform(severalWordCompanyName.join('')));
     const contactTemplate = {
       fields: {
           NAME: `${query.from.first_name}`,
@@ -331,6 +333,7 @@ bot.on('callback_query', query => {
     bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
   }
   if (query.data == 'severalWordCompanyTranslitLatYes') {
+    console.log('Несколько слов с анг на рус ', translitInRus.reverse(severalWordCompanyName.join('')));
     const contactTemplate = {
       fields: {
           NAME: `${query.from.first_name}`,
@@ -349,6 +352,7 @@ bot.on('callback_query', query => {
   }
 
   if (query.data == 'oneWordCompanyYes') {
+    console.log("Одно слово ", oneWordCompanyName);
     const contactTemplate = {
       fields: {
           NAME: `${query.from.first_name}`,
@@ -366,6 +370,7 @@ bot.on('callback_query', query => {
     bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
   }
   if (query.data == 'oneWordCompanyTranslitCyrYes') {
+    console.log('Одно слово с анг на рус ', translitInRus.transform(oneWordCompanyName));
     const contactTemplate = {
       fields: {
           NAME: `${query.from.first_name}`,
@@ -383,6 +388,7 @@ bot.on('callback_query', query => {
     bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
   }
   if (query.data == 'oneWordCompanyTranslitLatYes') {
+    console.log("Одно слово с анг на рус ", translitInRus.reverse(oneWordCompanyName));
     const contactTemplate = {
       fields: {
           NAME: `${query.from.first_name}`,
@@ -474,10 +480,10 @@ bot.on('callback_query', query => {
 });
 
 //* Основная функция. Отправка ссылки.
-function createOrder(contactTemplate) {
-  createContact(contactTemplate).then(response => {
+function createOrder(contactTemplate, companyName) {
+  createContact(contactTemplate, companyName).then(response => {
     console.log("Контакт создался.");
-    getContact(contactTemplate).then(response => {
+    getContact(contactTemplate, companyName).then(response => {
       const dlTmp = response;
       console.log("Контакт получен");
       createDealAndPaymentURL(dlTmp, contactTemplate).then(response => {
