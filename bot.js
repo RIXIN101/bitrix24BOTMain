@@ -325,7 +325,7 @@ bot.on('callback_query', query => {
       contactTemplate.fields.LAST_NAME = '';
     }
     bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-    createOrder(contactTemplate);
+    createOrder(contactTemplate, translitInRus.transform(severalWordCompanyName.join('')));
   }
   if (query.data == 'severalWordCompanyTranslitCyrNo') {
     bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
@@ -342,7 +342,7 @@ bot.on('callback_query', query => {
       contactTemplate.fields.LAST_NAME = '';
     }
     bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-    createOrder(contactTemplate);
+    createOrder(contactTemplate, translitInRus.reverse(severalWordCompanyName.join('')));
   }
   if (query.data == 'severalWordCompanyTranslitLatNo') {
     bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
@@ -360,7 +360,7 @@ bot.on('callback_query', query => {
       contactTemplate.fields.LAST_NAME = '';
     }
     bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-    createOrder(contactTemplate);
+    createOrder(contactTemplate, oneWordCompanyName);
   }
   if (query.data == 'oneWordCompanyNo') {
     bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
@@ -377,7 +377,7 @@ bot.on('callback_query', query => {
       contactTemplate.fields.LAST_NAME = '';
     }
     bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-    createOrder(contactTemplate);
+    createOrder(contactTemplate, translitInRus.transform(oneWordCompanyName));
   }
   if (query.data == 'oneWordCompanyTranslitCyrNo') {
     bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
@@ -394,12 +394,11 @@ bot.on('callback_query', query => {
       contactTemplate.fields.LAST_NAME = '';
     }
     bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-    createOrder(contactTemplate);
+    createOrder(contactTemplate, translitInRus.reverse(oneWordCompanyName));
   }
   if (query.data == 'oneWordCompanyTranslitLatNo') {
     bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
   }
-
 
   if (newMatch.length > 2) {
     if (query.data == 'review') {
