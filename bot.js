@@ -58,6 +58,7 @@ bot.onText(/\/help/, (msg) => {
 //* Обработка ввода пользователя (Вывод клавиатуры query)
 //* (обрботка правильности ввода команды; обработка того, из скольки слов состоит название компании)
 bot.on('message', msg => {
+  globalMsgObject = msg;
   const commandEventWord = msg.text.split(' ').join('').split('', 9).join('');
   const { id } = msg.chat;
   if (commandEventWord === 'Компания:') {
@@ -121,6 +122,17 @@ bot.on('message', msg => {
                     });
                   }, 2155)
                 } else {
+                  const rejectContactTmp = {
+                    fields: {
+                      NAME: msg.from.first_name,
+                      LAST_NAME: msg.from.last_name,
+                      COMMENTS: `@${msg.from.username} ${severalWordCompanyName.join('')}`
+                    }
+                  }
+                  if (msg.from.last_name == undefined) {
+                    rejectContactTmp.fields.LAST_NAME = '';
+                  }
+                  createRejectDeal(rejectContactTmp);
                   bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
                     reply_markup: {
                       inline_keyboard: [
@@ -159,6 +171,17 @@ bot.on('message', msg => {
                     });
                   }, 2155)
                 } else {
+                  const rejectContactTmp = {
+                    fields: {
+                      NAME: msg.from.first_name,
+                      LAST_NAME: msg.from.last_name,
+                      COMMENTS: `@${msg.from.username} ${severalWordCompanyName.join('')}`
+                    }
+                  }
+                  if (msg.from.last_name == undefined) {
+                    rejectContactTmp.fields.LAST_NAME = '';
+                  }
+                  createRejectDeal(rejectContactTmp);
                   bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
                     reply_markup: {
                       inline_keyboard: [
@@ -229,6 +252,17 @@ bot.on('message', msg => {
                     });
                   }, 2155)
                 } else {
+                  const rejectContactTmp = {
+                    fields: {
+                      NAME: msg.from.first_name,
+                      LAST_NAME: msg.from.last_name,
+                      COMMENTS: `@${msg.from.username} ${oneWordCompanyName}`
+                    }
+                  }
+                  if (msg.from.last_name == undefined) {
+                    rejectContactTmp.fields.LAST_NAME = '';
+                  }
+                  createRejectDeal(rejectContactTmp);
                   bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
                     reply_markup: {
                       inline_keyboard: [
@@ -267,6 +301,17 @@ bot.on('message', msg => {
                     });
                   }, 2155)
                 } else {
+                  const rejectContactTmp = {
+                    fields: {
+                      NAME: msg.from.first_name,
+                      LAST_NAME: msg.from.last_name,
+                      COMMENTS: `@${msg.from.username} ${oneWordCompanyName}`
+                    }
+                  }
+                  if (msg.from.last_name == undefined) {
+                    rejectContactTmp.fields.LAST_NAME = '';
+                  }
+                  createRejectDeal(rejectContactTmp);
                   bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
                     reply_markup: {
                       inline_keyboard: [
@@ -406,76 +451,29 @@ bot.on('callback_query', query => {
     bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
   }
 
-  if (newMatch.length > 2) {
-    if (query.data == 'review') {
-      bot.sendMessage(query.from.id, 'Подтвердите согласие на обработку персональных данных для того, чтобы мы связались с вами потом.', {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: "Да",
-                callback_data: "Yes2",
-              },
-              {
-                text: "Нет",
-                callback_data: "No2",
-              },
-            ],
+  if (query.data == 'review') {
+    bot.sendMessage(query.from.id, 'Подтвердите согласие на обработку персональных данных для того, чтобы мы связались с вами потом.', {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "Да",
+              callback_data: "Yes",
+            },
+            {
+              text: "Нет",
+              callback_data: "No",
+            },
           ],
-        },
-      });
-    }
-    if (query.data == 'Yes2') {
-      const rejectContactTmp = {
-        fields: {
-          NAME: query.from.first_name,
-          LAST_NAME: query.from.last_name,
-          COMMENTS: `@${query.from.username} ${severalWordCompanyName.join('')}`
-        }
-      }
-      if (query.from.last_name == undefined) {
-        rejectContactTmp.fields.LAST_NAME = '';
-      }
-      createRejectDeal(rejectContactTmp);
-    }
-    if (query.data == 'No2') {
-      bot.sendMessage(querySucData.from.id, 'Попробуйте ввести название компании на латиннице или на кириллице.');
-    }
-  } else {
-    if (query.data == 'review') {
-      bot.sendMessage(query.from.id, 'Подтвердите согласие на обработку персональных данных для того, чтобы мы связались с вами потом.', {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: "Да",
-                callback_data: "Yes3",
-              },
-              {
-                text: "Нет",
-                callback_data: "No3",
-              },
-            ],
-          ],
-        },
-      })
-    }
-    if (query.data == 'Yes3') {
-      const rejectContactTmp = {
-        fields: {
-          NAME: query.from.first_name,
-          LAST_NAME: query.from.last_name,
-          COMMENTS: `@${query.from.username} ${oneWordCompanyName}`
-        }
-      }
-      if (query.from.last_name == undefined) {
-        rejectContactTmp.fields.LAST_NAME = '';
-      }
-      createRejectDeal(rejectContactTmp);
-    }
-    if (query.data == 'No3') {
-      bot.sendMessage(query.from.id, 'Попробуйте ввести название компании на латиннице или на кириллице.');
-    }
+        ],
+      },
+    });
+  }
+  if (query.data == 'Yes') {
+    bot.sendMessage(query.from.id, `Заявка оставлена. С вами свяжуться в скором времени.`);
+  }
+  if (query.data == 'No') {
+    bot.sendMessage(query.from.id, 'Попробуйте ввести название компании на латиннице или на кириллице.');
   }
 });
 
@@ -589,7 +587,7 @@ function createRejectDeal(tmp) {
       const dlTmp = response;
       console.log("Контакт получен");
       createDeal(dlTmp).then(response => {
-        bot.sendMessage(queryData.from.id, response);
+        console.log(response);
       });
     });
   })
@@ -612,7 +610,7 @@ function getContactForReject(tmp) {
             fields: {
                 "TITLE": 'Касса_Отказ_Оплаты_Информации',
                 "CONTACT_ID": body.result[0].ID,
-                "COMMENTS": `@${queryData.from.username} ${severalWordCompanyName.join('')}`,
+                "COMMENTS": `@${globalMsgObject.from.username} ${severalWordCompanyName.join('')}`,
                 "OPPORTUNITY": 0
             }
           };
@@ -622,7 +620,7 @@ function getContactForReject(tmp) {
             fields: {
                 "TITLE": 'Касса_Отказ_Оплаты_Информации',
                 "CONTACT_ID": body.result[0].ID,
-                "COMMENTS": `@${queryData.from.username} ${oneWordCompanyName}`,
+                "COMMENTS": `@${globalMsgObject.from.username} ${oneWordCompanyName}`,
                 "OPPORTUNITY": 0
             }
           };
