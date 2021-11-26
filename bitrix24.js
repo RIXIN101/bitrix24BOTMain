@@ -6,47 +6,6 @@ const bitrix24Url = config.get('bitrix24Url');
 const TOKEN = config.get('TOKEN');
 
 //* Получение контакта
-/* exports.getContacts = function(nameCompany, chatId){
-getCompanyIdByName(nameCompany).then((response) => {
-  const companyId = response.result[0].ID;
-  getContactByCompanyId(companyId, chatId).then(response => {
-    return getContactByContactId(response);
-  })
-  //! then для работы!
-  .then((response)=>{
-    if (response.error == '') {
-      const text = 'Контакт, привязанный к компании, не обнаружен.';
-      const data = {
-          "chat_id": chatId,
-          "text": text
-      };
-      request.post({
-          url: `https://api.telegram.org/bot${TOKEN}/sendMessage`,
-          body: data,
-          json: true
-      }, (error, response, body) => {
-          if (error) console.log(error);
-          else console.log('Контакт, привязанный к компании, не обнаружен.')
-      });
-    } else {
-      const text = validateContactInfo(response);
-      const data = {
-          "chat_id": chatId,
-          "text": text
-      };
-      request.post({
-          url: `https://api.telegram.org/bot${TOKEN}/sendMessage`,
-          body: data,
-          json: true
-      }, (error, response, body) => {
-          if (error) console.log(error);
-          else console.log('Данные контакта отправлены')
-      });
-    }
-  })
-})
-} */
-
 exports.getContacts = function(nameCompany, chatId){
   getCompanyIdByName(nameCompany).then((response) => {
       const companyId = response.result[0].ID;
@@ -89,49 +48,51 @@ exports.getContacts = function(nameCompany, chatId){
         });
       })
   })
-  }
+}
 
 function getContactByContactId(contactsIdArray) {
-return new Promise((resolve, reject)=>{
-  const contactInfo = [];
-  for(let i = 0; i < contactsIdArray.length; i++) {
+  return new Promise((resolve, reject)=>{
+    const contactInfo = [];
+    for(let i = 0; i < contactsIdArray.length; i++) {
+      request({
+        url: `${bitrix24Url}/crm.contact.get?id=${contactsIdArray[i]}`,
+        json: true
+      }, (error, response, body) => {
+            if(error) reject(error)
+            contactInfo.push(validateContactInfo(body));
+            if (contactInfo.length == contactsIdArray.length) resolve(contactInfo)
+      });
+    }
+  })
+}
+
+function getContactByCompanyId(companyId) {
+  return new Promise((resolve, reject)=>{
     request({
-      url: `${bitrix24Url}/crm.contact.get?id=${contactsIdArray[i]}`,
+      url: `${bitrix24Url}/crm.company.contact.items.get?id=${companyId}`,
       json: true
     }, (error, response, body) => {
           if(error) reject(error)
-          contactInfo.push(validateContactInfo(body));
-          if (contactInfo.length == contactsIdArray.length) resolve(contactInfo)
-    });
-  }
-})
-}
-
-
-function getContactByCompanyId(companyId) {
-return new Promise((resolve, reject)=>{
-  request({
-    url: `${bitrix24Url}/crm.company.contact.items.get?id=${companyId}`,
-    json: true
-  }, (error, response, body) => {
-        if(error) reject(error)
-        if (body.result.length == 0) {
-          resolve(false);
-        } else {
-          const contactsIdArr = [];
-          for(let i = 0; i < body.result.length; i++) {
-            contactsIdArr.push(body.result[i].CONTACT_ID);
+          if (body.result.length == 0) {
+            resolve(false);
+          } else {
+            const contactsIdArr = [];
+            for(let i = 0; i < body.result.length; i++) {
+              contactsIdArr.push(body.result[i].CONTACT_ID);
+            }
+            resolve(contactsIdArr);
           }
-          resolve(contactsIdArr);
-        }
-    });
-})
+      });
+  })
 }
 //* Валидация данных контакта
 function validateContactInfo(response) {
   const respObj = {
     phone: ``,
     email: ``,
+    comments: ``,
+    position: ``,
+    partOfCity: ``
   };
   // Телефон(-ы)
   if (response.result.HAS_PHONE === "Y") {
@@ -145,21 +106,49 @@ function validateContactInfo(response) {
   } else {
     delete respObj.email;
   }
+  // Комментарий
+  if (response.result.COMMENTS != "") {
+    respObj.comments = response.result.COMMENTS;
+  } else {
+    delete respObj.comments;
+  }
+  // Должность
+  if (response.result.UF_CRM_1572360601903 != "") {
+    respObj.position = response.result.UF_CRM_1572360601903;
+  } else {
+    delete respObj.position;
+  }
+  // Часть города за которую отвечает
+  if (response.result.UF_CRM_1572360940877 != "") {
+    respObj.partOfCity = response.result.UF_CRM_1572360940877;
+  } else {
+    delete respObj.partOfCity;
+  }
+
   const successContactData = {
     Title: `\nКонтакт привязаный к компании`,
     NameAndLastName: `\nИмя: ${response.result.NAME} ${response.result.LAST_NAME}`
   };
+
   if (respObj.phone != undefined) {
     successContactData.Phone = `\nТелефон: ${respObj.phone}`;
   } else successContactData.Phone = '';
   if (respObj.email != undefined) {
     successContactData.Email = `\nE-mail: ${respObj.email}`;
   } else successContactData.Email = '';
+  if (respObj.comments != undefined) {
+    successContactData.comments = `\nКомментарий: ${respObj.comments}`;
+  } else successContactData.comments = '';
+  if (respObj.position != undefined) {
+    successContactData.position = `\nДолжность: ${respObj.position}`;
+  } else successContactData.position = '';
+  if (respObj.partOfCity != undefined) {
+    successContactData.partOfCity = `\nЗа какую часть города отвечает: ${respObj.partOfCity}`;
+  } else successContactData.partOfCity = '';
 
-  const successContactDataResp = successContactData.Title + successContactData.NameAndLastName + successContactData.Email + successContactData.Phone;
+  const successContactDataResp = successContactData.Title + successContactData.NameAndLastName + successContactData.Email + successContactData.Phone + successContactData.comments + successContactData.position + successContactData.partOfCity;
   return successContactDataResp;
 }
-
 
 //* Получение основной информации о компании
 exports.getCompany = function(nameCompany, chatId){
@@ -216,6 +205,7 @@ function validateCompanyInfo(objData) {
     phone: [],
     email: [],
     web: [],
+    comments: ``,
     kvt: ``,
     adressObject: ``,
   };
@@ -268,6 +258,11 @@ function validateCompanyInfo(objData) {
   } else {
     delete respObj.web;
   }
+  if (objData.result.COMMENTS !== "") {
+    respObj.comments = objData.result.COMMENTS;
+  } else {
+    delete respObj.comments
+  }
 
   const successData = {
     successDataTitle: `\nНазвание компании: ${respObj.title}`,
@@ -293,7 +288,11 @@ function validateCompanyInfo(objData) {
     successData.successDataKvt = `\nкВт: ${respObj.kvt}`;
   } else successData.successDataKvt = '';
 
-  const successDataRes = successData.successDataTitle + successData.successDataPhone + successData.successDataEmail + successData.successDataWeb + successData.successDataAdressObject + successData.successDataKvt;
+  if (respObj.comments != undefined) {
+    successData.successDataComments = `\nКомментарий: ${respObj.comments}`;
+  } else successData.successDataComments = '';
+
+  const successDataRes = successData.successDataTitle + successData.successDataPhone + successData.successDataEmail + successData.successDataWeb + successData.successDataAdressObject + successData.successDataKvt + successData.successDataComments;
   return successDataRes;
 }
 
