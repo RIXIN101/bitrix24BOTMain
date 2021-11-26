@@ -357,7 +357,7 @@ bot.on('callback_query', query => {
     createOrder(contactTemplate, severalWordCompanyName.join(''));
   }
   if (query.data == 'severalWordCompanyNo') {
-    bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
+    bot.sendMessage(query.from.id, `Напишите нам на «контакт поддержки».`);
   }
   if (query.data == 'severalWordCompanyTranslitCyrYes') {
     console.log('Несколько слов с рус на анг ', translitInRus.transform(severalWordCompanyName.join('')));
@@ -375,7 +375,7 @@ bot.on('callback_query', query => {
     createOrder(contactTemplate, translitInRus.transform(severalWordCompanyName.join('')));
   }
   if (query.data == 'severalWordCompanyTranslitCyrNo') {
-    bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
+    bot.sendMessage(query.from.id, `Напишите нам на «контакт поддержки».`);
   }
   if (query.data == 'severalWordCompanyTranslitLatYes') {
     console.log('Несколько слов с анг на рус ', translitInRus.reverse(severalWordCompanyName.join('')));
@@ -393,7 +393,7 @@ bot.on('callback_query', query => {
     createOrder(contactTemplate, translitInRus.reverse(severalWordCompanyName.join('')));
   }
   if (query.data == 'severalWordCompanyTranslitLatNo') {
-    bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
+    bot.sendMessage(query.from.id, `Напишите нам на «контакт поддержки».`);
   }
 
   if (query.data == 'oneWordCompanyYes') {
@@ -412,7 +412,7 @@ bot.on('callback_query', query => {
     createOrder(contactTemplate, oneWordCompanyName);
   }
   if (query.data == 'oneWordCompanyNo') {
-    bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
+    bot.sendMessage(query.from.id, `Напишите нам на «контакт поддержки».`);
   }
   if (query.data == 'oneWordCompanyTranslitCyrYes') {
     console.log('Одно слово с анг на рус ', translitInRus.transform(oneWordCompanyName));
@@ -430,7 +430,7 @@ bot.on('callback_query', query => {
     createOrder(contactTemplate, translitInRus.transform(oneWordCompanyName));
   }
   if (query.data == 'oneWordCompanyTranslitCyrNo') {
-    bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
+    bot.sendMessage(query.from.id, `Напишите нам на «контакт поддержки».`);
   }
   if (query.data == 'oneWordCompanyTranslitLatYes') {
     console.log("Одно слово с анг на рус ", translitInRus.reverse(oneWordCompanyName));
@@ -448,7 +448,7 @@ bot.on('callback_query', query => {
     createOrder(contactTemplate, translitInRus.reverse(oneWordCompanyName));
   }
   if (query.data == 'oneWordCompanyTranslitLatNo') {
-    bot.sendMessage(query.from.id, `Попробуйте ввести название как на кириллице, так и на латиннице`);
+    bot.sendMessage(query.from.id, `Напишите нам на «контакт поддержки».`);
   }
 
   if (query.data == 'review') {
