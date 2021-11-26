@@ -368,12 +368,15 @@ function validateSomeInfoCompany(objData) {
   else someInfoCompanyData.email = 'No';
   if (objData.result.WEB != undefined) someInfoCompanyData.web = '✅';
   else someInfoCompanyData.web = 'No';
+  if (objData.result.COMMENTS != undefined) someInfoCompanyData.comments = '✅';
+  else someInfoCompanyData.comments = 'No'
 
   let someInfoCompanyDataNotCheck = {
     title: `Название компании: ${someInfoCompanyData.title}`,
     phone: `Телефон: ${someInfoCompanyData.phone}`,
     email: `E-mail: ${someInfoCompanyData.email}`,
-    web: `Сайт: ${someInfoCompanyData.web}`
+    web: `Сайт: ${someInfoCompanyData.web}`,
+    comments: `Комментарий: ${someInfoCompanyData.comments}`
   }
 
   if (someInfoCompanyData.title == 'No') {
@@ -392,7 +395,11 @@ function validateSomeInfoCompany(objData) {
     delete someInfoCompanyDataNotCheck.web;
     if (someInfoCompanyDataNotCheck.web == undefined) someInfoCompanyDataNotCheck.web = '';
   }
+  if (someInfoCompanyData.comments == 'No') {
+    delete someInfoCompanyDataNotCheck.comments;
+    if (someInfoCompanyDataNotCheck.comments == undefined) someInfoCompanyDataNotCheck.comments == '';
+  }
 
-  someInfoCompanyDataParsed = `${someInfoCompanyDataNotCheck.title}\n${someInfoCompanyDataNotCheck.phone}\n${someInfoCompanyDataNotCheck.email}\n${someInfoCompanyDataNotCheck.web}`;
+  someInfoCompanyDataParsed = `${someInfoCompanyDataNotCheck.title}\n${someInfoCompanyDataNotCheck.phone}\n${someInfoCompanyDataNotCheck.email}\n${someInfoCompanyDataNotCheck.web}\n${someInfoCompanyDataNotCheck.comments}`;
   return someInfoCompanyDataParsed
 }
