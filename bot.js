@@ -26,10 +26,6 @@ const amount = config.get('amount');
 const bitrix24Url = config.get('bitrix24Url');
 const TOKEN = config.get('TOKEN');
 
-const isCyrillic = function (str) {
-  return /[а-я]/i.test(str);
-}
-
 //* Создание бота
 const bot = new TelegramBot(TOKEN, {
   polling: true,
@@ -282,7 +278,7 @@ bot.on('callback_query', query => {
   }
 });
 
-//* Основная функция. Отправка ссылки.
+//* Основная функция. Отправка ссылки. (main chaining function)
 function createOrder(leadTemplate) {
   createLeadAndPaymentURL(leadTemplate).then(response => {
     return checkOrderLink(response)
@@ -291,7 +287,7 @@ function createOrder(leadTemplate) {
     console.log("Ссылка была отправлена");
   });
 }
-//* Создание лида и ссылки на оплату
+//* Создание лида и ссылки на оплату (string)
 function createLeadAndPaymentURL(leadTemplate) {
   return new Promise((resolve, reject) => {
     request({
@@ -328,6 +324,7 @@ function checkOrderLink(kassaObjTemp) {
   });
 }
 
+//* Создание сделки, будь то ошибка или отзыв человека. (Promise {object})
 function createDeal(template) {
   return new Promise((resolve, reject) => {
     request({
@@ -357,3 +354,5 @@ function checkCompanyAndSendResponse(companyName) {
   })
 }
 
+//* Функция для проверки строки на кириллический ввод (bool)
+const isCyrillic =  (str) => {return /[а-я]/i.test(str)};
