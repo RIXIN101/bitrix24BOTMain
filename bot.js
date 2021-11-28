@@ -194,52 +194,55 @@ bot.on('message', msg => {
 bot.on('callback_query', query => {
   queryData = query;
   if (query.data == 'CompanyYes') {
-    const contactTemplate = {
-      fields: {
-          NAME: `${query.from.first_name}`,
-          LAST_NAME: `${query.from.last_name}`,
-          COMMENTS: `${query.from.id} ${companyName}`,
+    const leadTemp = {
+      "fields": {
+        "TITLE": "Оплата информации об объекте",
+		    "STATUS_ID": "NEW",
+		    "OPENED": "Y",
+		    "CONTACT_ID": 14681,
+		    "CURRENCY_ID": "RUB",
+		    "OPPORTUNITY": amount,
+		    "COMMENTS": `${query.from.id} ${companyName}`
       }
-    };
-    if (contactTemplate.fields.LAST_NAME == undefined) {
-      contactTemplate.fields.LAST_NAME = '';
     }
     bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-    createOrder(contactTemplate, companyName);
+    createOrder(leadTemp);
   }
   if (query.data == 'CompanyNo') {
     bot.sendMessage(query.from.id, `Напишите нам на «контакт поддержки».`);
   }
   if (query.data == 'CompanyCyrYes') {
-    const contactTemplate = {
-      fields: {
-          NAME: `${query.from.first_name}`,
-          LAST_NAME: `${query.from.last_name}`,
-          COMMENTS: `${query.from.id} ${translitInRus.transform(companyName)}`,
+    const leadTemp = {
+      "fields": {
+        "TITLE": "Оплата информации об объекте",
+		    "STATUS_ID": "NEW",
+		    "OPENED": "Y",
+		    "CONTACT_ID": 14681,
+		    "CURRENCY_ID": "RUB",
+		    "OPPORTUNITY": amount,
+		    "COMMENTS": `${query.from.id} ${translitInRus.transform(companyName)}`
       }
-    };
-    if (contactTemplate.fields.LAST_NAME == undefined) {
-      contactTemplate.fields.LAST_NAME = '';
     }
     bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-    createOrder(contactTemplate, translitInRus.transform(companyName));
+    createOrder(leadTemp);
   }
   if (query.data == 'CompanyCyrNo') {
     bot.sendMessage(query.from.id, `Напишите нам на «контакт поддержки».`);
   }
   if (query.data == 'CompanyLatYes') {
-    const contactTemplate = {
-      fields: {
-          NAME: `${query.from.first_name}`,
-          LAST_NAME: `${query.from.last_name}`,
-          COMMENTS: `${query.from.id} ${translitInRus.reverse(companyName)}`,
+    const leadTemp = {
+      "fields": {
+        "TITLE": "Оплата информации об объекте",
+		    "STATUS_ID": "NEW",
+		    "OPENED": "Y",
+		    "CONTACT_ID": 14681,
+		    "CURRENCY_ID": "RUB",
+		    "OPPORTUNITY": amount,
+		    "COMMENTS": `${query.from.id} ${translitInRus.reverse(companyName)}`
       }
-    };
-    if (contactTemplate.fields.LAST_NAME == undefined) {
-      contactTemplate.fields.LAST_NAME = '';
     }
     bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-    createOrder(contactTemplate, translitInRus.reverse(companyName));
+    createOrder(leadTemp);
   }
   if (query.data == 'CompanyLatNo') {
     bot.sendMessage(query.from.id, `Напишите нам на «контакт поддержки».`);
@@ -280,85 +283,30 @@ bot.on('callback_query', query => {
 });
 
 //* Основная функция. Отправка ссылки.
-function createOrder(contactTemplate, companyName) {
-  createContact(contactTemplate, companyName).then(response => {
-    console.log("Контакт создался.");
-    getContact(contactTemplate, companyName).then(response => {
-      const dlTmp = response;
-      console.log("Контакт получен");
-      createDealAndPaymentURL(dlTmp, contactTemplate).then(response => {
-        const ksObjTmp = response;
-        console.log('Сделка успешно создана');
-        return checkOrderLink(ksObjTmp, contactTemplate);
-      })
-      //! then для работы
-      .then(response => {
-        console.log('Ссылка на сделку отправлена');
-        bot.sendMessage(queryData.from.id, response, {parse_mode: 'HTML'})
-      });
-    })
-  })
-}
-
-//* Создание контакта
-function createContact(cntctTmplte) {
-  return new Promise((resolve, reject) => {
-    request({
-      url: `${bitrix24Url}/crm.contact.add?${httpBuildQuery(cntctTmplte)}`,
-      json: true
-    }, (error, response, body) => {
-      if(error) reject(error);
-      resolve(body);
-    });
+function createOrder(leadTemplate) {
+  createLeadAndPaymentURL(leadTemplate).then(response => {
+    return checkOrderLink(response)
+  }).then(response => {
+    bot.sendMessage(globalMsg.from.id, response, {parse_mode: 'HTML'});
+    console.log("Ссылка была отправлена");
   });
 }
-
-//* Получение контакта
-function getContact(contactTemplate, companyName) {
+//* Создание лида и ссылки на оплату
+function createLeadAndPaymentURL(leadTemplate) {
   return new Promise((resolve, reject) => {
     request({
-      url: `${bitrix24Url}/crm.contact.list?filter[NAME]=${encodeURIComponent(contactTemplate.fields.NAME)}&[LAST_NAME]=${encodeURIComponent(contactTemplate.fields.LAST_NAME)}`,
+      url: `${bitrix24Url}/crm.lead.add?${httpBuildQuery(leadTemplate)}`,
       json: true
     }, (error, response, body) => {
-      if (error) reject(error);
-      if (body.total == 0) {
-        const markdownRejection = 'Возможно вы неправильно ввели команду: Компания: _Название компании_'
-        resolve(markdownRejection);
-      }
-      if (body.total > 0) {
-        const dealTemp = {
-          fields: {
-              "TITLE": 'Касса_Оплата_Информации',
-              "CONTACT_ID": body.result[0].ID,
-              "COMMENTS": `${queryData.from.id} ${companyName}`,
-              "OPPORTUNITY": amount
-          }
-        };
-        resolve(dealTemp);
-      }
-    });
-  });
-}
-
-//* Создание сделки и ссылки на оплату
-function createDealAndPaymentURL(dealTemplate, contactTemplate) {
-  return new Promise((resolve, reject) => {
-    request({
-      url: `${bitrix24Url}/crm.deal.add?${httpBuildQuery(dealTemplate)}`,
-      json: true
-    }, (error, response, body) => {
+      console.log(body);
       console.log('Сделка создается');
       if (error) reject(error);
-      if (contactTemplate.fields.LAST_NAME == undefined) {
-        contactTemplate.fields.LAST_NAME = ''
-      }
       const options = {
         invId: body.result,
         outSumCurrence: 'RUB',
         isTest: true,
         userData: {
             productId: `${body.result}`,
-            username: `${contactTemplate.fields.NAME} ${contactTemplate.fields.LAST_NAME}`
         }
       }
       const paymentUrl = robokassaHelper.generatePaymentUrl(amount, 'Оплата информации', options);
@@ -408,3 +356,4 @@ function checkCompanyAndSendResponse(companyName) {
     })
   })
 }
+
