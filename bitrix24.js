@@ -1,5 +1,4 @@
 const config = require('config');
-const { response } = require('express');
 const request = require("request");
 var exports = module.exports = {};
 const bitrix24Url = config.get('bitrix24Url');
