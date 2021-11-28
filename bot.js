@@ -59,6 +59,7 @@ bot.onText(/\/help/, (msg) => {
 //* (обрботка правильности ввода команды; обработка того, из скольки слов состоит название компании)
 
 bot.on('message', msg => {
+  globalMsg = msg;
   const {id} = msg.from;
   splitMsg = msg.text.split(':');
   if (splitMsg[0] == 'Компания') {
@@ -111,17 +112,14 @@ bot.on('message', msg => {
                 });
               }, 2155)
             } else {
-              const rejectContactTmp = {
+              const dealTemp = {
                 fields: {
-                  NAME: msg.from.first_name,
-                  LAST_NAME: msg.from.last_name,
-                  COMMENTS: `@${msg.from.username} ${companyName}`
+                    "TITLE": 'Ошибка ввода пользователя',
+                    "COMMENTS": `@${msg.from.username} ${companyName}`,
+                    "OPPORTUNITY": 0
                 }
-              }
-              if (msg.from.last_name == undefined) {
-                rejectContactTmp.fields.LAST_NAME = '';
-              }
-              createRejectDeal(rejectContactTmp);
+              };
+              createDeal(dealTemp)
               bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
                 reply_markup: {
                   inline_keyboard: [
@@ -160,17 +158,14 @@ bot.on('message', msg => {
                 });
               }, 2155)
             } else {
-              const rejectContactTmp = {
+              const dealTemp = {
                 fields: {
-                  NAME: msg.from.first_name,
-                  LAST_NAME: msg.from.last_name,
-                  COMMENTS: `@${msg.from.username} ${companyName}`
+                    "TITLE": 'Ошибка ввода пользователя',
+                    "COMMENTS": `@${msg.from.username} ${companyName}`,
+                    "OPPORTUNITY": 0
                 }
-              }
-              if (msg.from.last_name == undefined) {
-                rejectContactTmp.fields.LAST_NAME = '';
-              }
-              createRejectDeal(rejectContactTmp);
+              };
+              createDeal(dealTemp)
               bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
                 reply_markup: {
                   inline_keyboard: [
@@ -269,6 +264,14 @@ bot.on('callback_query', query => {
     });
   }
   if (query.data == 'Yes') {
+    const dealTemp = {
+      fields: {
+          "TITLE": 'Заявка на неправильный ввод',
+          "COMMENTS": `@${globalMsg.from.username} ${companyName}`,
+          "OPPORTUNITY": 0
+      }
+    };
+    createDeal(dealTemp)
     bot.sendMessage(query.from.id, `Заявка оставлена. С вами свяжуться в скором времени.`);
   }
   if (query.data == 'No') {
@@ -377,72 +380,17 @@ function checkOrderLink(kassaObjTemp) {
   });
 }
 
-//* Если название такой компании скрипт не нашёл (main сhaining function for this function tree)
-function createRejectDeal(tmp) {
-  console.log("Создалась отказанная сделка");
-  createContact(tmp).then(response => {
-    console.log("Контакт создался.");
-    getContactForReject(tmp).then(response => {
-      const dlTmp = response;
-      console.log("Контакт получен");
-      createDeal(dlTmp).then(response => {
-        console.log(response);
-      });
-    });
-  })
-}
-
-function getContactForReject(tmp) {
+function createDeal(template) {
   return new Promise((resolve, reject) => {
     request({
-      url: `${bitrix24Url}/crm.contact.list?filter[NAME]=${encodeURIComponent(tmp.fields.NAME)}&[LAST_NAME]=${encodeURIComponent(tmp.fields.LAST_NAME)}`,
-      json: true
-    }, (error, response, body) => {
-      if (error) reject(error);
-      if (body.total == 0) {
-        const markdownRejection = 'Возникла ошибка: попробуйте ещё раз.';
-        resolve(markdownRejection);
-      }
-      if (body.total > 0) {
-        if (newMatch.length > 2) {
-          const dealTemp = {
-            fields: {
-                "TITLE": 'Касса_Отказ_Оплаты_Информации',
-                "CONTACT_ID": body.result[0].ID,
-                "COMMENTS": `@${globalMsgObject.from.username} ${severalWordCompanyName.join('')}`,
-                "OPPORTUNITY": 0
-            }
-          };
-          resolve(dealTemp);
-        } else {
-          const dealTemp = {
-            fields: {
-                "TITLE": 'Касса_Отказ_Оплаты_Информации',
-                "CONTACT_ID": body.result[0].ID,
-                "COMMENTS": `@${globalMsgObject.from.username} ${oneWordCompanyName}`,
-                "OPPORTUNITY": 0
-            }
-          };
-          resolve(dealTemp);
-        }
-      }
-    });
-  });
-}
-
-//* Создание сделки (object)
-function createDeal(dealTemplate) {
-  return new Promise((resolve, reject) => {
-    request({
-      url: `${bitrix24Url}/crm.deal.add?${httpBuildQuery(dealTemplate)}`,
+      url: `${bitrix24Url}/crm.deal.add?${httpBuildQuery(template)}`,
       json: true
     }, (error, response, body) => {
       if (error) reject(error);
       console.log('Сделка создается');
-      resolve('Заявка оставлена. С вами свяжуться в скором времени.');
     });
   })
-}
+};
 
 //* Проверяет существует ли компания (bool)
 function checkCompanyAndSendResponse(companyName) {
