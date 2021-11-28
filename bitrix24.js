@@ -360,8 +360,8 @@ function validateSomeInfoCompany(objData) {
     email: '',
     web: ''
   };
-  if (objData.result.TITLE != undefined) someInfoCompanyData.title = '✅';
-  else someInfoCompanyData.title = 'No';
+
+  objData.result.TITLE != undefined ? someInfoCompanyData.title = '✅' : someInfoCompanyData.title = 'No';
   if (objData.result.HAS_PHONE == 'Y') someInfoCompanyData.phone = '✅';
   else someInfoCompanyData.phone = 'No';
   if (objData.result.HAS_EMAIL == 'Y') someInfoCompanyData.email = '✅';
@@ -372,11 +372,11 @@ function validateSomeInfoCompany(objData) {
   else someInfoCompanyData.comments = 'No'
 
   let someInfoCompanyDataNotCheck = {
-    title: `Название компании: ${someInfoCompanyData.title}`,
-    phone: `Телефон: ${someInfoCompanyData.phone}`,
-    email: `E-mail: ${someInfoCompanyData.email}`,
-    web: `Сайт: ${someInfoCompanyData.web}`,
-    comments: `Комментарий: ${someInfoCompanyData.comments}`
+    title: `\nНазвание компании: ${someInfoCompanyData.title}`,
+    phone: `\nТелефон: ${someInfoCompanyData.phone}`,
+    email: `\nE-mail: ${someInfoCompanyData.email}`,
+    web: `\nСайт: ${someInfoCompanyData.web}`,
+    comments: `\nКомментарий: ${someInfoCompanyData.comments}`
   }
 
   if (someInfoCompanyData.title == 'No') {
@@ -400,6 +400,6 @@ function validateSomeInfoCompany(objData) {
     if (someInfoCompanyDataNotCheck.comments == undefined) someInfoCompanyDataNotCheck.comments == '';
   }
 
-  someInfoCompanyDataParsed = `${someInfoCompanyDataNotCheck.title}\n${someInfoCompanyDataNotCheck.phone}\n${someInfoCompanyDataNotCheck.email}\n${someInfoCompanyDataNotCheck.web}\n${someInfoCompanyDataNotCheck.comments}`;
+  someInfoCompanyDataParsed = someInfoCompanyDataNotCheck.title + someInfoCompanyDataNotCheck.phone + someInfoCompanyDataNotCheck.email + someInfoCompanyDataNotCheck.web + someInfoCompanyDataNotCheck.comments
   return someInfoCompanyDataParsed
 }

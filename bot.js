@@ -57,282 +57,139 @@ bot.onText(/\/help/, (msg) => {
 
 //* Обработка ввода пользователя (Вывод клавиатуры query)
 //* (обрботка правильности ввода команды; обработка того, из скольки слов состоит название компании)
+
 bot.on('message', msg => {
-  globalMsgObject = msg;
-  const commandEventWord = msg.text.split(' ').join('').split('', 9).join('');
-  const { id } = msg.chat;
-  if (commandEventWord === 'Компания:') {
-    match = msg.text.split(' ').join('').split('Компания:');
-    newMatch = msg.text.split(' ');
-    oneWordCompanyName = match[1];
-    if (newMatch.length > 2) {
-      if (msg.text[8] == ' ' || msg.text[9] != ' ') {
-        bot.sendMessage(id, 'Напишите _/help_ для получения информации о вводе команды корректно', {parse_mode: 'Markdown'})
+  const {id} = msg.from;
+  splitMsg = msg.text.split(':');
+  if (splitMsg[0] == 'Компания') {
+    companyName = splitMsg[1].trim();
+    bot.sendMessage(id, `Мы проверяем наличие компание в нашей базе...`);
+    checkCompanyAndSendResponse(companyName).then(response => {
+      if (response == true) {
+          bot.sendMessage(id, `Найдена информация о компании: ${companyName}`);
+          bitrix24.someInfoCompany(companyName, id);
+          setTimeout(() => {
+            bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    {
+                      text: "Да",
+                      callback_data: "CompanyYes",
+                    },
+                    {
+                      text: "Нет",
+                      callback_data: "CompanyNo",
+                    },
+                  ],
+                ],
+              },
+            });
+          }, 1855)
       } else {
-        severalWordCompanyName = msg.text.split('Компания:').join(' ').split("");
-        for(let i = 0; i < severalWordCompanyName.length; i++) {
-          if (severalWordCompanyName[i] == ' ') delete severalWordCompanyName[i];
-          else break;
+        if (isCyrillic(companyName) == true) {
+          checkCompanyAndSendResponse(translitInRus.transform(companyName)).then(response => {
+            if (response == true) {
+              bot.sendMessage(id, `Найдена информация о компании: ${companyName}`);
+              bitrix24.someInfoCompany(translitInRus.transform(companyName), id);
+              setTimeout(() => {
+                bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
+                  reply_markup: {
+                    inline_keyboard: [
+                      [
+                        {
+                          text: "Да",
+                          callback_data: "CompanyCyrYes",
+                        },
+                        {
+                          text: "Нет",
+                          callback_data: "CompanyCyrNo",
+                        },
+                      ],
+                    ],
+                  },
+                });
+              }, 2155)
+            } else {
+              const rejectContactTmp = {
+                fields: {
+                  NAME: msg.from.first_name,
+                  LAST_NAME: msg.from.last_name,
+                  COMMENTS: `@${msg.from.username} ${companyName}`
+                }
+              }
+              if (msg.from.last_name == undefined) {
+                rejectContactTmp.fields.LAST_NAME = '';
+              }
+              createRejectDeal(rejectContactTmp);
+              bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
+                reply_markup: {
+                  inline_keyboard: [
+                    [
+                      {
+                        text: "Оставить заявку",
+                        callback_data: "review",
+                      },
+                    ],
+                  ],
+                },
+              });
+            }
+          });
+        } else {
+          checkCompanyAndSendResponse(translitInRus.reverse(companyName)).then(response => {
+            if (response == true) {
+              bot.sendMessage(id, `Найдена информация о компании: ${companyName}`);
+              bitrix24.someInfoCompany(translitInRus.reverse(companyName), id);
+              setTimeout(() => {
+                bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
+                  reply_markup: {
+                    inline_keyboard: [
+                      [
+                        {
+                          text: "Да",
+                          callback_data: "CompanyLatYes",
+                        },
+                        {
+                          text: "Нет",
+                          callback_data: "CompanyLatNo",
+                        },
+                      ],
+                    ],
+                  },
+                });
+              }, 2155)
+            } else {
+              const rejectContactTmp = {
+                fields: {
+                  NAME: msg.from.first_name,
+                  LAST_NAME: msg.from.last_name,
+                  COMMENTS: `@${msg.from.username} ${companyName}`
+                }
+              }
+              if (msg.from.last_name == undefined) {
+                rejectContactTmp.fields.LAST_NAME = '';
+              }
+              createRejectDeal(rejectContactTmp);
+              bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
+                reply_markup: {
+                  inline_keyboard: [
+                    [
+                      {
+                        text: "Оставить заявку",
+                        callback_data: "review",
+                      },
+                    ],
+                  ],
+                },
+              });
+            }
+          })
         }
-        bot.sendMessage(id, `Мы проверяем наличие компание в нашей базе...`)
-        checkCompanyAndSendResponse(severalWordCompanyName.join('')).then(response => {
-          if (response == true) {
-              bot.sendMessage(id, `Найдена информация о компании: ${severalWordCompanyName.join('')}`);
-              bitrix24.someInfoCompany(severalWordCompanyName.join(''), id);
-              setTimeout(() => {
-                bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
-                  reply_markup: {
-                    inline_keyboard: [
-                      [
-                        {
-                          text: "Да",
-                          callback_data: "severalWordCompanyYes",
-                        },
-                        {
-                          text: "Нет",
-                          callback_data: "severalWordCompanyNo",
-                        },
-                      ],
-                    ],
-                  },
-                });
-              }, 1855)
-          } else {
-            if (isCyrillic(severalWordCompanyName.join('')) == true) {
-              checkCompanyAndSendResponse(translitInRus.transform(severalWordCompanyName.join(''))).then(response => {
-                if (response == true) {
-                  bot.sendMessage(id, `Найдена информация о компании: ${severalWordCompanyName.join('')}`);
-                  bitrix24.someInfoCompany(translitInRus.transform(severalWordCompanyName.join('')), id);
-                  setTimeout(() => {
-                    bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
-                      reply_markup: {
-                        inline_keyboard: [
-                          [
-                            {
-                              text: "Да",
-                              callback_data: "severalWordCompanyTranslitCyrYes",
-                            },
-                            {
-                              text: "Нет",
-                              callback_data: "severalWordCompanyTranslitCyrNo",
-                            },
-                          ],
-                        ],
-                      },
-                    });
-                  }, 2155)
-                } else {
-                  const rejectContactTmp = {
-                    fields: {
-                      NAME: msg.from.first_name,
-                      LAST_NAME: msg.from.last_name,
-                      COMMENTS: `@${msg.from.username} ${severalWordCompanyName.join('')}`
-                    }
-                  }
-                  if (msg.from.last_name == undefined) {
-                    rejectContactTmp.fields.LAST_NAME = '';
-                  }
-                  createRejectDeal(rejectContactTmp);
-                  bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
-                    reply_markup: {
-                      inline_keyboard: [
-                        [
-                          {
-                            text: "Оставить заявку",
-                            callback_data: "review",
-                          },
-                        ],
-                      ],
-                    },
-                  });
-                }
-              });
-            } else {
-              checkCompanyAndSendResponse(translitInRus.reverse(severalWordCompanyName.join(''))).then(response => {
-                if (response == true) {
-                  bot.sendMessage(id, `Найдена информация о компании: ${severalWordCompanyName.join('')}`);
-                  bitrix24.someInfoCompany(translitInRus.reverse(severalWordCompanyName.join('')), id);
-                  setTimeout(() => {
-                    bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
-                      reply_markup: {
-                        inline_keyboard: [
-                          [
-                            {
-                              text: "Да",
-                              callback_data: "severalWordCompanyTranslitLatYes",
-                            },
-                            {
-                              text: "Нет",
-                              callback_data: "severalWordCompanyTranslitLatNo",
-                            },
-                          ],
-                        ],
-                      },
-                    });
-                  }, 2155)
-                } else {
-                  const rejectContactTmp = {
-                    fields: {
-                      NAME: msg.from.first_name,
-                      LAST_NAME: msg.from.last_name,
-                      COMMENTS: `@${msg.from.username} ${severalWordCompanyName.join('')}`
-                    }
-                  }
-                  if (msg.from.last_name == undefined) {
-                    rejectContactTmp.fields.LAST_NAME = '';
-                  }
-                  createRejectDeal(rejectContactTmp);
-                  bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
-                    reply_markup: {
-                      inline_keyboard: [
-                        [
-                          {
-                            text: "Оставить заявку",
-                            callback_data: "review",
-                          },
-                        ],
-                      ],
-                    },
-                  });
-                }
-              })
-            }
-          }
-        });
       }
-    } else {
-      if (msg.text[9] != ' ') {
-        bot.sendMessage(id, 'Напишите _/help_ для получения информации о вводе команды корректно', {parse_mode: 'Markdown'})
-      } else {
-        bot.sendMessage(id, `Мы проверяем наличие компание в нашей базе...`)
-        checkCompanyAndSendResponse(oneWordCompanyName).then(response => {
-          if (response == true) {
-              bot.sendMessage(id, `Найдена информация о компании: ${oneWordCompanyName}`);
-              bitrix24.someInfoCompany(oneWordCompanyName, id);
-              setTimeout(() => {
-                bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
-                  reply_markup: {
-                    inline_keyboard: [
-                      [
-                        {
-                          text: "Да",
-                          callback_data: "oneWordCompanyYes",
-                        },
-                        {
-                          text: "Нет",
-                          callback_data: "oneWordCompanyNo",
-                        },
-                      ],
-                    ],
-                  },
-                });
-              }, 1855)
-          } else {
-            if (isCyrillic(oneWordCompanyName) == true) {
-              checkCompanyAndSendResponse(translitInRus.transform(oneWordCompanyName)).then(response => {
-                if (response == true) {
-                  bot.sendMessage(id, `Найдена информация о компании: ${oneWordCompanyName}`);
-                  bitrix24.someInfoCompany(translitInRus.transform(oneWordCompanyName), id);
-                  setTimeout(() => {
-                    bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
-                      reply_markup: {
-                        inline_keyboard: [
-                          [
-                            {
-                              text: "Да",
-                              callback_data: "oneWordCompanyTranslitCyrYes",
-                            },
-                            {
-                              text: "Нет",
-                              callback_data: "oneWordCompanyTranslitCyrNo",
-                            },
-                          ],
-                        ],
-                      },
-                    });
-                  }, 2155)
-                } else {
-                  const rejectContactTmp = {
-                    fields: {
-                      NAME: msg.from.first_name,
-                      LAST_NAME: msg.from.last_name,
-                      COMMENTS: `@${msg.from.username} ${oneWordCompanyName}`
-                    }
-                  }
-                  if (msg.from.last_name == undefined) {
-                    rejectContactTmp.fields.LAST_NAME = '';
-                  }
-                  createRejectDeal(rejectContactTmp);
-                  bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
-                    reply_markup: {
-                      inline_keyboard: [
-                        [
-                          {
-                            text: "Оставить заявку",
-                            callback_data: "review",
-                          },
-                        ],
-                      ],
-                    },
-                  });
-                }
-              });
-            } else {
-              checkCompanyAndSendResponse(translitInRus.reverse(oneWordCompanyName)).then(response => {
-                if (response == true) {
-                  bot.sendMessage(id, `Найдена информация о компании: ${oneWordCompanyName}`);
-                  bitrix24.someInfoCompany(translitInRus.reverse(oneWordCompanyName), id);
-                  setTimeout(() => {
-                    bot.sendMessage(id, `После оплаты вам будет предоставлена информация о её контактах. Хотите перейти к оплате?`, {
-                      reply_markup: {
-                        inline_keyboard: [
-                          [
-                            {
-                              text: "Да",
-                              callback_data: "oneWordCompanyTranslitLatYes",
-                            },
-                            {
-                              text: "Нет",
-                              callback_data: "oneWordCompanyTranslitLatNo",
-                            },
-                          ],
-                        ],
-                      },
-                    });
-                  }, 2155)
-                } else {
-                  const rejectContactTmp = {
-                    fields: {
-                      NAME: msg.from.first_name,
-                      LAST_NAME: msg.from.last_name,
-                      COMMENTS: `@${msg.from.username} ${oneWordCompanyName}`
-                    }
-                  }
-                  if (msg.from.last_name == undefined) {
-                    rejectContactTmp.fields.LAST_NAME = '';
-                  }
-                  createRejectDeal(rejectContactTmp);
-                  bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
-                    reply_markup: {
-                      inline_keyboard: [
-                        [
-                          {
-                            text: "Оставить заявку",
-                            callback_data: "review",
-                          },
-                        ],
-                      ],
-                    },
-                  });
-                }
-              })
-            }
-          }
-        });
-      }
-    }
+    });
   }
-  if ((commandEventWord != 'Компания:' && msg.text != '/help') && msg.text != '/start') {
+  if ((splitMsg[0] != 'Компания' && msg.text != '/help') && msg.text != '/start') {
     bot.sendMessage(msg.chat.id, `Введите _/help_ для помощи.`, {parse_mode: 'Markdown'})
   }
 });
@@ -341,113 +198,55 @@ bot.on('message', msg => {
 //* (проверка существует ли такая компания; отправка ссылки если компания существует; и создание "ложной сделки" если компания не сущесвтует)
 bot.on('callback_query', query => {
   queryData = query;
-  if (query.data == 'severalWordCompanyYes') {
-    console.log('Несколько слов ', severalWordCompanyName.join(''));
+  if (query.data == 'CompanyYes') {
     const contactTemplate = {
       fields: {
           NAME: `${query.from.first_name}`,
           LAST_NAME: `${query.from.last_name}`,
-          COMMENTS: `${query.from.id} ${severalWordCompanyName.join('')}`,
+          COMMENTS: `${query.from.id} ${companyName}`,
       }
     };
     if (contactTemplate.fields.LAST_NAME == undefined) {
       contactTemplate.fields.LAST_NAME = '';
     }
     bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-    createOrder(contactTemplate, severalWordCompanyName.join(''));
+    createOrder(contactTemplate, companyName);
   }
-  if (query.data == 'severalWordCompanyNo') {
+  if (query.data == 'CompanyNo') {
     bot.sendMessage(query.from.id, `Напишите нам на «контакт поддержки».`);
   }
-  if (query.data == 'severalWordCompanyTranslitCyrYes') {
-    console.log('Несколько слов с рус на анг ', translitInRus.transform(severalWordCompanyName.join('')));
+  if (query.data == 'CompanyCyrYes') {
     const contactTemplate = {
       fields: {
           NAME: `${query.from.first_name}`,
           LAST_NAME: `${query.from.last_name}`,
-          COMMENTS: `${query.from.id} ${translitInRus.transform(severalWordCompanyName.join(''))}`,
+          COMMENTS: `${query.from.id} ${translitInRus.transform(companyName)}`,
       }
     };
     if (contactTemplate.fields.LAST_NAME == undefined) {
       contactTemplate.fields.LAST_NAME = '';
     }
     bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-    createOrder(contactTemplate, translitInRus.transform(severalWordCompanyName.join('')));
+    createOrder(contactTemplate, translitInRus.transform(companyName));
   }
-  if (query.data == 'severalWordCompanyTranslitCyrNo') {
+  if (query.data == 'CompanyCyrNo') {
     bot.sendMessage(query.from.id, `Напишите нам на «контакт поддержки».`);
   }
-  if (query.data == 'severalWordCompanyTranslitLatYes') {
-    console.log('Несколько слов с анг на рус ', translitInRus.reverse(severalWordCompanyName.join('')));
+  if (query.data == 'CompanyLatYes') {
     const contactTemplate = {
       fields: {
           NAME: `${query.from.first_name}`,
           LAST_NAME: `${query.from.last_name}`,
-          COMMENTS: `${query.from.id} ${translitInRus.reverse(severalWordCompanyName.join(''))}`,
+          COMMENTS: `${query.from.id} ${translitInRus.reverse(companyName)}`,
       }
     };
     if (contactTemplate.fields.LAST_NAME == undefined) {
       contactTemplate.fields.LAST_NAME = '';
     }
     bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-    createOrder(contactTemplate, translitInRus.reverse(severalWordCompanyName.join('')));
+    createOrder(contactTemplate, translitInRus.reverse(companyName));
   }
-  if (query.data == 'severalWordCompanyTranslitLatNo') {
-    bot.sendMessage(query.from.id, `Напишите нам на «контакт поддержки».`);
-  }
-
-  if (query.data == 'oneWordCompanyYes') {
-    console.log("Одно слово ", oneWordCompanyName);
-    const contactTemplate = {
-      fields: {
-          NAME: `${query.from.first_name}`,
-          LAST_NAME: `${query.from.last_name}`,
-          COMMENTS: `${query.from.id} ${oneWordCompanyName}`,
-      }
-    };
-    if (contactTemplate.fields.LAST_NAME == undefined) {
-      contactTemplate.fields.LAST_NAME = '';
-    }
-    bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-    createOrder(contactTemplate, oneWordCompanyName);
-  }
-  if (query.data == 'oneWordCompanyNo') {
-    bot.sendMessage(query.from.id, `Напишите нам на «контакт поддержки».`);
-  }
-  if (query.data == 'oneWordCompanyTranslitCyrYes') {
-    console.log('Одно слово с анг на рус ', translitInRus.transform(oneWordCompanyName));
-    const contactTemplate = {
-      fields: {
-          NAME: `${query.from.first_name}`,
-          LAST_NAME: `${query.from.last_name}`,
-          COMMENTS: `${query.from.id} ${translitInRus.transform(oneWordCompanyName)}`,
-      }
-    };
-    if (contactTemplate.fields.LAST_NAME == undefined) {
-      contactTemplate.fields.LAST_NAME = '';
-    }
-    bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-    createOrder(contactTemplate, translitInRus.transform(oneWordCompanyName));
-  }
-  if (query.data == 'oneWordCompanyTranslitCyrNo') {
-    bot.sendMessage(query.from.id, `Напишите нам на «контакт поддержки».`);
-  }
-  if (query.data == 'oneWordCompanyTranslitLatYes') {
-    console.log("Одно слово с анг на рус ", translitInRus.reverse(oneWordCompanyName));
-    const contactTemplate = {
-      fields: {
-          NAME: `${query.from.first_name}`,
-          LAST_NAME: `${query.from.last_name}`,
-          COMMENTS: `${query.from.id} ${translitInRus.reverse(oneWordCompanyName)}`,
-      }
-    };
-    if (contactTemplate.fields.LAST_NAME == undefined) {
-      contactTemplate.fields.LAST_NAME = '';
-    }
-    bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
-    createOrder(contactTemplate, translitInRus.reverse(oneWordCompanyName));
-  }
-  if (query.data == 'oneWordCompanyTranslitLatNo') {
+  if (query.data == 'CompanyLatNo') {
     bot.sendMessage(query.from.id, `Напишите нам на «контакт поддержки».`);
   }
 
