@@ -47,19 +47,17 @@ bot.onText(/\/start/, (msg) => {
 //* Обработка команды /help (пишет как пользователю нужно вводить команду)
 bot.onText(/\/help/, (msg) => {
   const { id } = msg.chat;
-  const msgObj = 'Напишите _Компания: название компании_ (вводить без точки в конце)';
+  const msgObj = 'Напишите _название компании_ (вводить без точки в конце)';
   bot.sendMessage(id, msgObj, {parse_mode: 'Markdown'});
 });
 
 //* Обработка ввода пользователя (Вывод клавиатуры query)
 //* (обрботка правильности ввода команды; обработка того, из скольки слов состоит название компании)
-
 bot.on('message', msg => {
   globalMsg = msg;
   const {id} = msg.from;
-  splitMsg = msg.text.split(':');
-  if (splitMsg[0] == 'Компания') {
-    companyName = splitMsg[1].trim();
+  if (msg.text != '/help' && msg.text != '/start') {
+    companyName = msg.text.trim();
     bot.sendMessage(id, `Мы проверяем наличие компание в нашей базе...`);
     checkCompanyAndSendResponse(companyName).then(response => {
       if (response == true) {
@@ -108,14 +106,19 @@ bot.on('message', msg => {
                 });
               }, 2155)
             } else {
-              const dealTemp = {
-                fields: {
-                    "TITLE": 'Ошибка ввода пользователя',
-                    "COMMENTS": `@${msg.from.username} ${companyName}`,
-                    "OPPORTUNITY": 0
+              const leadTemp = {
+                "fields": {
+                  "TITLE": "Ошибка ввода пользователя",
+                  "STATUS_ID": "NEW",
+                  "OPENED": "Y",
+                  "CONTACT_ID": 14681,
+                  "CURRENCY_ID": "RUB",
+                  "OPPORTUNITY": 0,
+                  "COMMENTS": `${msg.from.id} ${companyName}`,
+                  "UTM_CAMPAIGN": "Ошибка ввода"
                 }
-              };
-              createDeal(dealTemp)
+              }
+              createLead(leadTemp)
               bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
                 reply_markup: {
                   inline_keyboard: [
@@ -154,14 +157,19 @@ bot.on('message', msg => {
                 });
               }, 2155)
             } else {
-              const dealTemp = {
-                fields: {
-                    "TITLE": 'Ошибка ввода пользователя',
-                    "COMMENTS": `@${msg.from.username} ${companyName}`,
-                    "OPPORTUNITY": 0
+              const leadTemp = {
+                "fields": {
+                  "TITLE": "Ошибка ввода пользователя",
+                  "STATUS_ID": "NEW",
+                  "OPENED": "Y",
+                  "CONTACT_ID": 14681,
+                  "CURRENCY_ID": "RUB",
+                  "OPPORTUNITY": 0,
+                  "COMMENTS": `${msg.from.id} ${companyName}`,
+                  "UTM_CAMPAIGN": "Ошибка ввода"
                 }
-              };
-              createDeal(dealTemp)
+              }
+              createLead(leadTemp)
               bot.sendMessage(id, 'Контактов этой компании у нас нет – оставьте заявку, мы попробуем их получить. После этого пришлем их вам бесплатно.', {
                 reply_markup: {
                   inline_keyboard: [
@@ -180,9 +188,6 @@ bot.on('message', msg => {
       }
     });
   }
-  if ((splitMsg[0] != 'Компания' && msg.text != '/help') && msg.text != '/start') {
-    bot.sendMessage(msg.chat.id, `Введите _/help_ для помощи.`, {parse_mode: 'Markdown'})
-  }
 });
 
 //* Обработка callback query
@@ -198,7 +203,8 @@ bot.on('callback_query', query => {
 		    "CONTACT_ID": 14681,
 		    "CURRENCY_ID": "RUB",
 		    "OPPORTUNITY": amount,
-		    "COMMENTS": `${query.from.id} ${companyName}`
+		    "COMMENTS": `${query.from.id} ${companyName}`,
+        "UTM_CAMPAIGN": "Оплата информации об объекте"
       }
     }
     bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
@@ -216,7 +222,8 @@ bot.on('callback_query', query => {
 		    "CONTACT_ID": 14681,
 		    "CURRENCY_ID": "RUB",
 		    "OPPORTUNITY": amount,
-		    "COMMENTS": `${query.from.id} ${translitInRus.transform(companyName)}`
+		    "COMMENTS": `${query.from.id} ${translitInRus.transform(companyName)}`,
+        "UTM_CAMPAIGN": "Оплата информации об объекте"
       }
     }
     bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
@@ -234,7 +241,8 @@ bot.on('callback_query', query => {
 		    "CONTACT_ID": 14681,
 		    "CURRENCY_ID": "RUB",
 		    "OPPORTUNITY": amount,
-		    "COMMENTS": `${query.from.id} ${translitInRus.reverse(companyName)}`
+		    "COMMENTS": `${query.from.id} ${translitInRus.reverse(companyName)}`,
+        "UTM_CAMPAIGN": "Оплата информации об объекте"
       }
     }
     bot.sendMessage(query.from.id, 'Создается ссылка на оплату. Пожалуйста подождите');
@@ -263,14 +271,19 @@ bot.on('callback_query', query => {
     });
   }
   if (query.data == 'Yes') {
-    const dealTemp = {
-      fields: {
-          "TITLE": 'Заявка на неправильный ввод',
-          "COMMENTS": `@${globalMsg.from.username} ${companyName}`,
-          "OPPORTUNITY": 0
+    const leadTemp = {
+      "fields": {
+        "TITLE": "Заявка на неправильный ввод",
+        "STATUS_ID": "NEW",
+        "OPENED": "Y",
+        "CONTACT_ID": 14681,
+        "CURRENCY_ID": "RUB",
+        "OPPORTUNITY": 0,
+        "COMMENTS": `${query.from.id} ${companyName}`,
+        "UTM_CAMPAIGN": "Заявка на неправильный ввод"
       }
-    };
-    createDeal(dealTemp)
+    }
+    createLead(leadTemp)
     bot.sendMessage(query.from.id, `Заявка оставлена. С вами свяжуться в скором времени.`);
   }
   if (query.data == 'No') {
@@ -310,7 +323,6 @@ function createLeadAndPaymentURL(leadTemplate) {
     });
   });
 }
-
 //* Проверяет пустая ли ссылка или нет (Promise {object})
 function checkOrderLink(kassaObjTemp) {
   return new Promise((resolve, reject) => {
@@ -325,14 +337,14 @@ function checkOrderLink(kassaObjTemp) {
 }
 
 //* Создание сделки, будь то ошибка или отзыв человека. (Promise {object})
-function createDeal(template) {
+function createLead(template) {
   return new Promise((resolve, reject) => {
     request({
       url: `${bitrix24Url}/crm.deal.add?${httpBuildQuery(template)}`,
       json: true
     }, (error, response, body) => {
       if (error) reject(error);
-      console.log('Сделка создается');
+      console.log('Лид создается');
     });
   })
 };
@@ -345,11 +357,7 @@ function checkCompanyAndSendResponse(companyName) {
       json: true
     }, (error, response, body) => {
       if (error) reject(error);
-      if (body.result.length == 0) {
-        resolve(false);
-      } else {
-        resolve(true)
-      }
+      body.result.length == 0 ? resolve(false) : resolve(true);
     })
   })
 }
