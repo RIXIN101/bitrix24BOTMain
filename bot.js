@@ -165,7 +165,7 @@ bot.on('message', msg => {
                   "CONTACT_ID": 14681,
                   "CURRENCY_ID": "RUB",
                   "OPPORTUNITY": 0,
-                  "COMMENTS": `${msg.from.id} ${companyName}`,
+                  "COMMENTS": `@${msg.from.username} ${companyName}`,
                   "UTM_CAMPAIGN": "Ошибка ввода"
                 }
               }
@@ -278,7 +278,7 @@ bot.on('callback_query', query => {
         "CONTACT_ID": 14681,
         "CURRENCY_ID": "RUB",
         "OPPORTUNITY": 0,
-        "COMMENTS": `${query.from.id} ${companyName}`,
+        "COMMENTS": `@${query.from.username} ${companyName}`,
         "UTM_CAMPAIGN": "Заявка на неправильный ввод"
       }
     }
