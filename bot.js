@@ -189,7 +189,6 @@ bot.on('message', msg => {
     });
   }
 });
-
 //* Обработка callback query
 //* (проверка существует ли такая компания; отправка ссылки если компания существует; и создание "ложной сделки" если компания не сущесвтует)
 bot.on('callback_query', query => {
@@ -340,7 +339,7 @@ function checkOrderLink(kassaObjTemp) {
 function createLead(template) {
   return new Promise((resolve, reject) => {
     request({
-      url: `${bitrix24Url}/crm.deal.add?${httpBuildQuery(template)}`,
+      url: `${bitrix24Url}/crm.lead.add?${httpBuildQuery(template)}`,
       json: true
     }, (error, response, body) => {
       if (error) reject(error);
