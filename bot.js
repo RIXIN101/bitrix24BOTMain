@@ -47,8 +47,25 @@ bot.onText(/\/start/, (msg) => {
 //* Обработка команды /help (пишет как пользователю нужно вводить команду)
 bot.onText(/\/help/, (msg) => {
   const { id } = msg.chat;
-  const msgObj = 'Напишите _название компании_ (вводить без точки в конце)';
+  const msgObj = 'Напишите _название компании_ (вводить без точки в конце)\nЧтобы оставить отзыв о нашей работе вы можете использовать команду _/review ваш текст_';
   bot.sendMessage(id, msgObj, {parse_mode: 'Markdown'});
+});
+
+bot.onText(/\/review (.+)/, msg => {
+  const leadTemp = {
+    "fields": {
+      "TITLE": "Отзыв бот оплата информации",
+      "STATUS_ID": "NEW",
+      "OPENED": "Y",
+      "CONTACT_ID": 14681,
+      "CURRENCY_ID": "RUB",
+      "OPPORTUNITY": 0,
+      "COMMENTS": `@${msg.from.username} ${msg.text.split('/review')[1].trim()}`,
+      "UTM_CAMPAIGN": "Отзыв бот"
+    }
+  }
+  createLead(leadTemp);
+  bot.sendMessage(msg.chat.id , 'Ваш отзыв очень важен для нас.');
 });
 
 //* Обработка ввода пользователя (Вывод клавиатуры query)
@@ -56,7 +73,7 @@ bot.onText(/\/help/, (msg) => {
 bot.on('message', msg => {
   globalMsg = msg;
   const {id} = msg.from;
-  if (msg.text != '/help' && msg.text != '/start') {
+  if (msg.text != '/help' && msg.text != '/start' && msg.text.split(' ')[0] != '/review') {
     companyName = msg.text.trim();
     bot.sendMessage(id, `Мы проверяем наличие компание в нашей базе...`);
     checkCompanyAndSendResponse(companyName).then(response => {

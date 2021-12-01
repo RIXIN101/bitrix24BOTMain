@@ -373,3 +373,4 @@ function validateSomeInfoCompany(objData) {
   someInfoCompanyDataParsed = someInfoCompanyDataNotCheck.title + someInfoCompanyDataNotCheck.phone + someInfoCompanyDataNotCheck.email + someInfoCompanyDataNotCheck.web + someInfoCompanyDataNotCheck.comments
   return someInfoCompanyDataParsed
 }
+
