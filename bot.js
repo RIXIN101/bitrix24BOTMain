@@ -114,7 +114,7 @@ bot.on('message', msg => {
                   "CONTACT_ID": 14681,
                   "CURRENCY_ID": "RUB",
                   "OPPORTUNITY": 0,
-                  "COMMENTS": `${msg.from.id} ${companyName}`,
+                  "COMMENTS": `@${msg.from.username} ${companyName}`,
                   "UTM_CAMPAIGN": "Ошибка ввода"
                 }
               }
