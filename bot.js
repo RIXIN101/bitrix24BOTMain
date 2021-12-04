@@ -50,7 +50,7 @@ bot.onText(/\/help/, (msg) => {
   const msgObj = 'Напишите _название компании_ (вводить без точки в конце)\nЧтобы оставить отзыв о нашей работе вы можете использовать команду _/review ваш текст_';
   bot.sendMessage(id, msgObj, {parse_mode: 'Markdown'});
 });
-
+//* Обработка команды /review (принимает после пробела текст отзыва и отправляет его в битрикс)
 bot.onText(/\/review (.+)/, msg => {
   const leadTemp = {
     "fields": {
