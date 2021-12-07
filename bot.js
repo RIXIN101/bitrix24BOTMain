@@ -75,7 +75,7 @@ bot.on('message', msg => {
   const {id} = msg.from;
   if (msg.text != '/help' && msg.text != '/start' && msg.text.split(' ')[0] != '/review') {
     companyName = msg.text.trim();
-    bot.sendMessage(id, `Мы проверяем наличие компание в нашей базе...`);
+    bot.sendMessage(id, `Мы проверяем наличие компании в нашей базе...`);
     checkCompanyAndSendResponse(companyName).then(response => {
       if (response == true) {
           bot.sendMessage(id, `Найдена информация о компании: ${companyName}`);
