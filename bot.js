@@ -18,6 +18,7 @@ const robokassaHelper = new robokassa.RobokassaHelper({
   hashingAlgorithm: 'sha256',
   password1: 'EbRlGJ347cNLrzk8mAP0',
   password2: 'geJi0YH1T0pD3MgrjJ0l',
+  testMode: false,
   resultUrlRequestMethod: 'GET'
 });
 //* Данные из конфига
