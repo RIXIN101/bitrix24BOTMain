@@ -16,8 +16,8 @@ const translitInRus = new cyrillicToTranslit();
 const robokassaHelper = new robokassa.RobokassaHelper({
   merchantLogin: 'MyRenter',
   hashingAlgorithm: 'sha256',
-  password1: 'geJi0YH1T0pD3MgrjJ0l',
-  password2: 'EbRlGJ347cNLrzk8mAP0',
+  password1: 's7kQRV7A2pwV6RWInv0H',
+  password2: 'oRhQNv8Nq8ZPA36opZz6',
   testMode: false,
   resultUrlRequestMethod: 'GET'
 });
@@ -327,7 +327,7 @@ function createLeadAndPaymentURL(leadTemplate) {
       const options = {
         invId: body.result,
         outSumCurrence: 'RUB',
-        isTest: true,
+        isTest: false,
         userData: {
             productId: `${body.result}`,
         }
