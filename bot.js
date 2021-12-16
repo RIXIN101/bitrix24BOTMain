@@ -1,8 +1,8 @@
 //1 pas test YE8wIF77oPpz5XGUQ4Zq
 //2 pas test TelXsF8GA2wT08Eeftp0
 
-// 1 no test rG4iwygid1a42aG9NXVc
-// 2 no test i4q9JGe09FOVhEZszu3f
+// 1 no test geJi0YH1T0pD3MgrjJ0l
+// 2 no test EbRlGJ347cNLrzk8mAP0
 //* Подключение библиотек
 const TelegramBot = require("node-telegram-bot-api");
 const config = require('config');
@@ -16,8 +16,8 @@ const translitInRus = new cyrillicToTranslit();
 const robokassaHelper = new robokassa.RobokassaHelper({
   merchantLogin: 'MyRenter',
   hashingAlgorithm: 'sha256',
-  password1: 'rG4iwygid1a42aG9NXVc',
-  password2: 'i4q9JGe09FOVhEZszu3f',
+  password1: 'geJi0YH1T0pD3MgrjJ0l',
+  password2: 'EbRlGJ347cNLrzk8mAP0',
   testMode: true,
   resultUrlRequestMethod: 'GET'
 });
@@ -34,7 +34,7 @@ bot.onText(/\/start/, (msg) => {
   bot.sendMessage(
     msg.chat.id,
     `
-Прямые контакты арендаторов коммерческих помещений в СПб по 299 рублей.
+Прямые контакты арендаторов коммерческих помещений в СПб по 99 рублей.
 Только компании, которые ищут помещения в аренду в настоящий момент.
 Если контакты окажутся не актуальными – вернем деньги.
 Напишите название компании и проверьте, есть ли у нас контакты сотрудников отдела развития...
