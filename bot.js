@@ -16,8 +16,8 @@ const translitInRus = new cyrillicToTranslit();
 const robokassaHelper = new robokassa.RobokassaHelper({
   merchantLogin: 'adminMikhail',
   hashingAlgorithm: 'sha256',
-  password1: 's7kQRV7A2pwV6RWInv0H',
-  password2: 'oRhQNv8Nq8ZPA36opZz6',
+  password1: 'TNwS0y7vWZ2tc7pGc0sI',
+  password2: 'l4WdC56HWNTONCl74UvZ',
   testMode: false,
   resultUrlRequestMethod: 'GET'
 });
