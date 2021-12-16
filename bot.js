@@ -14,7 +14,7 @@ const cyrillicToTranslit = require('cyrillic-to-translit-js');
 const translitInRus = new cyrillicToTranslit();
 //* Создание экземпляра "Робокассы"
 const robokassaHelper = new robokassa.RobokassaHelper({
-  merchantLogin: 'MyRenter',
+  merchantLogin: 'adminMikhail',
   hashingAlgorithm: 'sha256',
   password1: 's7kQRV7A2pwV6RWInv0H',
   password2: 'oRhQNv8Nq8ZPA36opZz6',
