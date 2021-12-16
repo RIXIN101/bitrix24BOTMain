@@ -16,9 +16,9 @@ const translitInRus = new cyrillicToTranslit();
 const robokassaHelper = new robokassa.RobokassaHelper({
   merchantLogin: 'MyRenter',
   hashingAlgorithm: 'sha256',
-  password1: 'geJi0YH1T0pD3MgrjJ0l',
-  password2: 'EbRlGJ347cNLrzk8mAP0',
-  testMode: false,
+  password1: 'YE8wIF77oPpz5XGUQ4Zq',
+  password2: 'TelXsF8GA2wT08Eeftp0',
+  testMode: true,
   resultUrlRequestMethod: 'GET'
 });
 //* Данные из конфига
