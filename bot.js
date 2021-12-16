@@ -16,8 +16,8 @@ const translitInRus = new cyrillicToTranslit();
 const robokassaHelper = new robokassa.RobokassaHelper({
   merchantLogin: 'MyRenter',
   hashingAlgorithm: 'sha256',
-  password1: 'YE8wIF77oPpz5XGUQ4Zq',
-  password2: 'TelXsF8GA2wT08Eeftp0',
+  password1: 'rG4iwygid1a42aG9NXVc',
+  password2: 'i4q9JGe09FOVhEZszu3f',
   testMode: true,
   resultUrlRequestMethod: 'GET'
 });
@@ -27,9 +27,7 @@ const bitrix24Url = config.get('bitrix24Url');
 const TOKEN = config.get('TOKEN');
 
 //* Создание бота
-const bot = new TelegramBot(TOKEN, {
-  polling: true,
-});
+const bot = new TelegramBot(TOKEN, {polling: true});
 
 //* Обработка команды /start (приветствует пользователя)
 bot.onText(/\/start/, (msg) => {

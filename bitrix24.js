@@ -270,6 +270,7 @@ function validateCompanyInfo(objData) {
   return successDataRes;
 }
 
+//* Информация о некоторых данных компании
 exports.someInfoCompany = function(nameCompany, chatId) {
   getCompanyIdByName(nameCompany).then((response) => {
     console.log('Ok');
