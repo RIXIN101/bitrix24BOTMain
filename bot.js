@@ -14,11 +14,11 @@ const cyrillicToTranslit = require('cyrillic-to-translit-js');
 const translitInRus = new cyrillicToTranslit();
 //* Создание экземпляра "Робокассы"
 const robokassaHelper = new robokassa.RobokassaHelper({
-  merchantLogin: 'MyRenter',
+  merchantLogin: 'adminMikhail',
   hashingAlgorithm: 'sha256',
-  password1: 'YE8wIF77oPpz5XGUQ4Zq',
-  password2: 'TelXsF8GA2wT08Eeftp0',
-  testMode: true,
+  password1: 'geJi0YH1T0pD3MgrjJ0l',
+  password2: 'EbRlGJ347cNLrzk8mAP0',
+  testMode: false,
   resultUrlRequestMethod: 'GET'
 });
 //* Данные из конфига
