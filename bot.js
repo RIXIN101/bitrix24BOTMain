@@ -16,8 +16,8 @@ const robokassa = require('node-robokassa');
 const robokassaHelper = new robokassa.RobokassaHelper({
   merchantLogin: 'MyRenter',
   hashingAlgorithm: 'sha256',
-  password1: 'SPrUcB7e3ZuUP4J0MjS6',
-  password2: 'l4WdC56HWNTONCl74UvZ',
+  password1: 'l2tl8VMa0yRF22HiCzeD',
+  password2: 'QZ9nC42wkhwQ5eQI9ItW',
   testMode: false,
   resultUrlRequestMethod: 'GET'
 });
