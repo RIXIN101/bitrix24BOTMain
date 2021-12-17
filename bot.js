@@ -8,15 +8,15 @@ const TelegramBot = require("node-telegram-bot-api");
 const config = require('config');
 const request = require("request");
 const httpBuildQuery = require("http-build-query");
-const robokassa = require('node-robokassa');
 const bitrix24 = require('./bitrix24');
 const cyrillicToTranslit = require('cyrillic-to-translit-js');
 const translitInRus = new cyrillicToTranslit();
 //* Создание экземпляра "Робокассы"
+const robokassa = require('node-robokassa');
 const robokassaHelper = new robokassa.RobokassaHelper({
   merchantLogin: 'MyRenter',
   hashingAlgorithm: 'sha256',
-  password1: 'TNwS0y7vWZ2tc7pGc0sI',
+  password1: 'SPrUcB7e3ZuUP4J0MjS6',
   password2: 'l4WdC56HWNTONCl74UvZ',
   testMode: false,
   resultUrlRequestMethod: 'GET'
